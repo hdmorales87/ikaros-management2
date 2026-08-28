@@ -12,6 +12,7 @@ import RequestDetailPage from './features/requests/RequestDetailPage'
 import RequestPage from './features/requests/RequestPage'
 import UsersPage from './features/users/UsersPage'
 import AssetDetailPage from './features/assets/AssetDetailPage'
+import RequirePermission from './components/RequirePermission'
 
 function LoginPage() {
   const navigate = useNavigate()
@@ -72,7 +73,7 @@ function ProtectedLayout() {
     {canManageUsers && <Route path="usuarios" element={<UsersPage />} />}
     <Route path="solicitudes/nueva" element={<RequestPage />} />
     <Route path="solicitudes/:table/:id" element={<RequestDetailPage />} />
-    <Route path="activos/:id" element={<AssetDetailPage />} />
+    <Route path="activos/:id" element={<RequirePermission permission={11}><AssetDetailPage /></RequirePermission>} />
     {definitions.map((definition) => <Route path={definition.path} element={<ModulePage definition={definition} />} key={definition.path} />)}
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes></main></div>

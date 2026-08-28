@@ -97,6 +97,7 @@ export type TechnicalField = { id: number; nombre: string; tipo: string; validac
 
 export const technicalSheetApi = {
   fields: (tabla: string, idMaestro: number) => api.get<TechnicalField[]>('/camposFicha', { params: { tabla, idMaestro } }).then(({ data }) => data),
+  values: (tabla: string, idCampo: number) => api.get<{ id: number; valor: string }[]>('/valoresFicha', { params: { tabla, idCampo } }).then(({ data }) => data),
   save: (tabla: string, idMaestro: number, arrayCampos: Record<string, string>) => api.post('/guardarCamposFicha', { tabla, idMaestro, arrayCampos }).then(({ data }) => data),
 }
 
