@@ -8,6 +8,8 @@ import KnowledgePage from '../knowledge/KnowledgePage'
 import ProjectsPage from '../projects/ProjectsPage'
 import CompanyPage from '../companies/CompanyPage'
 import SmtpPage from '../settings/SmtpPage'
+import SecurityPolicyPage from '../settings/SecurityPolicyPage'
+import CompanyModulesPage from '../companies/CompanyModulesPage'
 
 export default function ModulePage({ definition }: { definition: ModuleDefinition }) {
   if (definition.path === 'config/areas') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre', 'capacidad_atencion']} />
@@ -26,5 +28,8 @@ export default function ModulePage({ definition }: { definition: ModuleDefinitio
   if (definition.path === 'proyectos') return <ProjectsPage />
   if (definition.path === 'config/empresa') return <CompanyPage />
   if (definition.path === 'config/smtp') return <SmtpPage />
+  if (definition.path === 'config/politicas') return <SecurityPolicyPage />
+  if (definition.path === 'config/empresa/modulos') return <CompanyModulesPage />
+  if (definition.path === 'config/dias-festivos') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['fecha', 'descripcion']} />
   return <DataGridPage config={definition} />
 }

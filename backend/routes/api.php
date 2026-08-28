@@ -27,7 +27,7 @@ Route::middleware('security.headers')->group(function () {
 Route::middleware(['security.headers', 'authenticate.jwt'])->group(function () {
     // Company routes
     Route::post('/sincronizarEmpresa', [App\Http\Controllers\CompanyController::class, 'sincronizarEmpresa']);
-    Route::post('/guardaModulos', [App\Http\Controllers\CompanyController::class, 'guardaModulos']);
+    Route::post('/guardaModulos', [App\Http\Controllers\CompanyController::class, 'guardaModulos'])->middleware('permission:19');
     Route::post('/crearDirectorios', [App\Http\Controllers\CompanyController::class, 'crearDirectorios']);
     Route::get('/getCompanyData', [App\Http\Controllers\CompanyController::class, 'getCompanyData']);
     Route::get('/getCompanyModules', [App\Http\Controllers\CompanyController::class, 'getCompanyModules']);
@@ -60,6 +60,7 @@ Route::middleware(['security.headers', 'authenticate.jwt'])->group(function () {
     Route::get('/getConocimientoById/{id}', [App\Http\Controllers\ConocimientoController::class, 'getConocimientoById']);
     Route::post('/guardarReputacionConocimiento', [App\Http\Controllers\ConocimientoController::class, 'guardarReputacionConocimiento']);
     Route::post('/guardaPermisos', [App\Http\Controllers\RoleController::class, 'guardaPermisos'])->middleware('permission:32');
+    Route::get('/roles/{idRol}/permisos', [App\Http\Controllers\RoleController::class, 'permisos'])->middleware('permission:32');
     Route::get('/obtenerConsumoAlmacenamiento', [App\Http\Controllers\FileManagerController::class, 'obtenerConsumoAlmacenamiento']);
     Route::post('/uploaderFile', [App\Http\Controllers\FileManagerController::class, 'uploaderFile']);
     Route::post('/deleteFile', [App\Http\Controllers\FileManagerController::class, 'deleteFile']);

@@ -7,6 +7,11 @@ use Illuminate\Database\Connection;
 
 class RoleService
 {
+    public function permissions(int $roleId, string $uuid): array
+    {
+        return $this->connection($uuid)->table('roles_permisos')->where('id_rol', $roleId)->pluck('id_permiso')->map(fn ($id) => (int) $id)->all();
+    }
+
     public function savePermissions(int $roleId, array $permissions, string $uuid): void
     {
         $connection = $this->connection($uuid);

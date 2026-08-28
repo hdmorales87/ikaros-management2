@@ -32,5 +32,10 @@ export const moduleDefinitions: ModuleDefinition[] = [
   { path: 'config/tipos-documentacion', title: 'Tipos de documentación', permission: 56, table: 'tipos_documentacion', description: 'Tipos de documentos.', columns: ['id', 'nombre', 'activo'] },
   { path: 'config/extensiones', title: 'Extensiones', permission: 87, table: 'extensiones', description: 'Extensiones de archivo permitidas.', columns: ['id', 'nombre', 'activo'] },
   { path: 'config/empresa', title: 'Empresa', permission: 19, table: 'companies', description: 'Información de la empresa activa.', columns: ['razon_social', 'documento', 'tipo_licencia'] },
+  { path: 'config/empresa/modulos', title: 'Módulos de empresa', permission: 19, table: 'companies_modulos', description: 'Funcionalidades activas para la empresa.', columns: ['id_modulo'] },
   { path: 'config/smtp', title: 'SMTP', permission: 21, table: 'smtp', description: 'Prueba de configuración de correo.', columns: ['servidor', 'puerto', 'seguridad_smtp', 'correo'] },
+  { path: 'config/politicas', title: 'Políticas de seguridad', permission: 36, table: 'politicas_seguridad', description: 'Reglas activas de seguridad.', columns: ['id', 'password_vencimiento', 'intentos_login', 'activo'] },
+  { path: 'config/dias-festivos', title: 'Días festivos', permission: 96, table: 'dias_festivos', description: 'Calendario de días no laborables.', columns: ['id', 'fecha', 'descripcion', 'activo'] },
+  { path: 'config/riesgos/probabilidad', title: 'Probabilidad de riesgos', permission: 102, table: 'proyectos_riesgos_probabilidad', description: 'Escala de probabilidad de riesgos.', columns: ['id', 'nombre', 'activo'] },
+  { path: 'config/riesgos/impacto', title: 'Impacto de riesgos', permission: 103, table: 'proyectos_riesgos_impacto', description: 'Escala de impacto de riesgos.', columns: ['id', 'nombre', 'activo'] },
 ]

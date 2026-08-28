@@ -40,7 +40,7 @@ export type Session = {
   token: string
   permisos?: string
   modulos?: string
-  userData?: { nombre?: string; apellido?: string; email?: string }
+  userData?: { id?: number; nombre?: string; apellido?: string; email?: string }
   companyData?: { razon_social?: string }
 }
 
@@ -84,6 +84,7 @@ export const userApi = {
 }
 
 export const roleApi = {
+  permissions: (roleId: number) => api.get<number[]>(`/roles/${roleId}/permisos`).then(({ data }) => data),
   savePermissions: (idRol: number, arrayPermisos: number[]) => api.post('/guardaPermisos', { idRol, arrayPermisos }).then(({ data }) => data),
 }
 
@@ -151,14 +152,20 @@ export const knowledgeApi = {
   find: (id: number) => api.get<{ tema: string; solucion: string }[]>(`/getConocimientoById/${id}`).then(({ data }) => data[0]),
 }
 
-export type CompanyData = { razon_social?: string; documento?: string; tipo_licencia?: string; fecha_vencimiento_licencia?: string; maximo_usuarios?: number; cuota_almacenamiento?: number; uuid?: string }
+export type CompanyData = { id?: number; razon_social?: string; documento?: string; tipo_licencia?: string; fecha_vencimiento_licencia?: string; maximo_usuarios?: number; cuota_almacenamiento?: number; uuid?: string }
 
 export const companyApi = {
   current: () => api.get<CompanyData>('/getCompanyData').then(({ data }) => data),
+  modules: () => api.get<{ id_modulo: number }[]>('/getCompanyModules').then(({ data }) => data.map((item) => item.id_modulo)),
+  saveModules: (arrayModulos: number[], idRow: number) => api.post('/guardaModulos', { arrayModulos, idRow }).then(({ data }) => data),
 }
 
 export const mailApi = {
   checkSmtp: (email: string) => api.post('/checkSMTP', { email }).then(({ data }) => data),
+}
+
+export const policyApi = {
+  current: () => api.get<Record<string, unknown>[]>('/getPoliticasSeguridad').then(({ data }) => data),
 }
 
 export function logout() {
