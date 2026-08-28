@@ -81,6 +81,7 @@ export const userApi = {
   create: (payload: Record<string, unknown>) => api.post<User>('/users', payload).then(({ data }) => data),
   update: (id: number, payload: Record<string, unknown>) => api.put<User>(`/users/${id}`, payload).then(({ data }) => data),
   remove: (id: number) => api.delete(`/users/${id}`).then(({ data }) => data),
+  sendActivation: (idUser: number) => api.post('/enviarMailActivacion', { idUser }).then(({ data }) => data),
 }
 
 export const roleApi = {
