@@ -200,6 +200,34 @@ VITE_COMPANY_UUID=tu-uuid
 - sincronización IMAP
 - datagrid controlado por whitelist
 
+## Swagger / OpenAPI
+
+La API del backend está preparada para documentarse con Swagger/OpenAPI usando Laravel Swagger. La documentación base ya quedó preparada en los controladores del backend y en la configuración del proyecto.
+
+### Generación del documento
+
+```bash
+cd backend
+composer require darkaonline/l5-swagger
+php artisan vendor:publish --provider="L5Swagger\\L5SwaggerServiceProvider"
+php artisan l5-swagger:generate
+php artisan serve
+```
+
+Luego abre la UI en:
+
+```text
+http://localhost:8000/api/documentation
+```
+
+### Archivos relacionados
+
+- [backend/config/l5-swagger.php](backend/config/l5-swagger.php)
+- [backend/app/Http/Controllers/OpenApiDocsController.php](backend/app/Http/Controllers/OpenApiDocsController.php)
+- [backend/routes/api.php](backend/routes/api.php)
+
+> La generación real de la especificación en Laravel no se limita a inspeccionar rutas: requiere anotaciones Swagger en los controladores y la librería de documentación. Esa base ya quedó configurada para el proyecto.
+
 ## Validación actual
 
 Se cuenta con evidencia funcional y técnica de la migración en curso:

@@ -110,6 +110,34 @@ El backend ya está soportando rutas para:
 - archivos adjuntos y almacenamiento
 - dashboards y reportes
 
+## Swagger / OpenAPI
+
+La API del backend está preparada para documentarse con Swagger/OpenAPI usando Laravel Swagger.
+
+### Generación de la documentación
+
+```bash
+cd backend
+composer require darkaonline/l5-swagger
+php artisan vendor:publish --provider="L5Swagger\\L5SwaggerServiceProvider"
+php artisan l5-swagger:generate
+php artisan serve
+```
+
+La UI queda disponible en:
+
+```text
+http://localhost:8000/api/documentation
+```
+
+### Archivos de referencia
+
+- [config/l5-swagger.php](config/l5-swagger.php)
+- [app/Http/Controllers/OpenApiDocsController.php](app/Http/Controllers/OpenApiDocsController.php)
+- [routes/api.php](routes/api.php)
+
+> La documentación real en Laravel se genera con anotaciones Swagger en los controladores y la librería l5-swagger. Esa base ya fue preparada en este backend.
+
 ## Validación actual
 
 La validación efectiva disponible en esta sesión incluye:
