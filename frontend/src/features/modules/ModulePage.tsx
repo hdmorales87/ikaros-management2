@@ -18,10 +18,12 @@ import ThirdPartiesPage from '../third-parties/ThirdPartiesPage'
 import InitiativesPage from '../initiatives/InitiativesPage'
 import CommitteesPage from '../initiatives/CommitteesPage'
 import CompanyModulesPage from '../companies/CompanyModulesPage'
+import ReportsPage from '../reports/ReportsPage'
+import TrainingPage from '../training/TrainingPage'
 
 export default function ModulePage({ definition }: { definition: ModuleDefinition }) {
   if (definition.path === 'proyectos') return <ProjectsPage />
-  if (definition.path === 'capacitaciones') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre', 'instructor', 'lugar']} />
+  if (definition.path === 'capacitaciones') return <TrainingPage />
   if (definition.path === 'conocimiento') return <KnowledgePage />
   if (definition.path === 'horas') return <HoursPage />
   if (definition.path === 'config/roles') return <RolesPage />
@@ -43,6 +45,7 @@ export default function ModulePage({ definition }: { definition: ModuleDefinitio
   if (definition.path === 'servicios') return <RequestBoardPage table="servicios" type="servicio" title={definition.title} />
   if (definition.path === 'proyectos/actividades') return <ActivitiesPage />
   if (definition.path === 'proyectos/gantt') return <GanttPage />
+  if (definition.path === 'reportes') return <ReportsPage />
   if (definition.path === 'capacitaciones/asistentes') return <TrainingAttendeesPage />
   if (definition.path === 'clientes') return <ThirdPartiesPage kind="cliente" />
   if (definition.path === 'proveedores') return <ThirdPartiesPage kind="proveedor" />
