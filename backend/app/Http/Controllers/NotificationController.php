@@ -61,6 +61,7 @@ class NotificationController extends Controller
         $data = $request->validate(['ids' => ['required'], 'tipo' => ['required', 'string', 'in:planeadas,ejecutadas']]);
         $ids = is_string($data['ids']) ? json_decode($data['ids'], true, 512, JSON_THROW_ON_ERROR) : $data['ids'];
         abort_unless(is_array($ids), 422, 'Lista de horas inválida.');
-        return response()->json($this->notificationService->confirmedHours(array_map('intval', $ids), $data['tipo'], (string) $request->header('x-uuid', '')));
+        $identity = (new \App\Helpers\JwtAuth())->checkToken(str_replace('Bearer ', '', (string) $request->header('Authorization')), true);
+        return response()->json($this->notificationService->confirmedHours(array_map('intval', $ids), $data['tipo'], (int) ($identity->sub ?? 0), (string) $request->header('x-uuid', '')));
     }
 }

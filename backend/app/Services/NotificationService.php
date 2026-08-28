@@ -98,12 +98,27 @@ class NotificationService
         return ['msg' => 'success'];
     }
 
-    public function confirmedHours(array $ids, string $type, string $uuid): array
+    public function confirmedHours(array $ids, string $type, int $userId, string $uuid): array
     {
         abort_unless(in_array($type, ['planeadas', 'ejecutadas'], true), 422, 'Tipo de horas inválido.');
         $connection = $this->connection($uuid);
-        $records = $connection->table('proyectos_horas_registro')->whereIn('id', $ids)->get(['id_colaborador', 'horas_'.$type, 'observaciones_'.$type]);
+        $records = $connection->table('proyectos_horas_registro')->whereIn('id', $ids)->get(['id', 'id_colaborador', 'horas_'.$type, 'observaciones_'.$type]);
         if ($records->isEmpty()) return ['msg' => 'not_found'];
+        $connection->transaction(function () use ($connection, $records, $type, $userId): void {
+            $connection->table('proyectos_horas_registro')->whereIn('id', $records->pluck('id'))->update([
+                'estado_validacion_'.$type => 1,
+                'id_usuario_validacion_'.$type => $userId,
+                'fecha_validacion_'.$type => now()->toDateString(),
+            ]);
+            $connection->table('proyectos_horas_registro_seguimientos')->insert($records->map(fn ($record) => [
+                'id_registro' => $record->id,
+                'suceso' => 'Horas '.$type.' confirmadas',
+                'descripcion' => 'Confirmación registrada desde el módulo de horas.',
+                'id_usuario' => $userId,
+                'fecha' => now(),
+                'activo' => 1,
+            ])->all());
+        });
         $emails = $connection->table('users')->whereIn('id', $records->pluck('id_colaborador'))->pluck('email')->all();
         $summary = $records->map(fn ($record) => 'Horas: '.$record->{'horas_'.$type}.' - '.$record->{'observaciones_'.$type})->implode('<br>');
         $this->mailService->sendMany($emails, 'Confirmación de horas '.$type, '<h1>Horas confirmadas</h1><p>'.$summary.'</p>', $uuid);

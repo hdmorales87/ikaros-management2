@@ -12,10 +12,16 @@
 
 - Autenticación, recuperación, activación, compañías, módulos, usuarios, roles y permisos.
 - Solicitudes, SLA, asignación, trazabilidad, encuestas, terceros, conocimiento, archivos e importación Excel.
-- Activos con relaciones operativas, ficha técnica y adjuntos.
+- Activos con relaciones operativas (tipo, proveedor, estado, asignación, compra), ficha técnica y adjuntos.
 - Proyectos, actividades, subactividades, riesgos, Gantt editable y captura de línea base con histórico.
-- Capacitaciones, adjuntos, inscripción y confirmación de asistencia.
-- Iniciativas, comités, formularios de planificación y validaciones.
+- Capacitaciones con planificación (instructor, intensidad, fechas, lugar, observaciones), adjuntos, inscripción y confirmación de asistencia.
+- Iniciativas con planificación completa (presupuesto, tiempo, propietario, beneficios, escenarios).
+- Comités de iniciativas con creación, gestión de aprobadores y notificación a aprobadores activos.
+- Horas de proyecto con confirmación persistente, validador, fecha, trazabilidad y estado de validación visible.
+- Ubicaciones por departamento, gestionadas desde configuración.
+- Encuestas de satisfacción para solicitudes: administración de preguntas.
+- Encuestas de terceros: preguntas diferenciadas por cliente/proveedor, administración desde configuración.
+- Terceros con puntajes de satisfacción visibles, invitaciones solo a clientes.
 - Reporte operativo de solicitudes con exportación CSV.
 - SMTP y notificaciones principales.
 - IMAP tenant-aware: prueba de conexión, reglas, sincronización de mensajes no leídos, creación/asignación de solicitudes y adjuntos con cuota/extensiones configurables.
@@ -38,16 +44,31 @@
 
 ### Producto
 
-- Dashboards analíticos completos por módulo y reportes adicionales con filtros de fecha, SLA, área y responsable. Confirmar si siguen siendo necesarios formatos XLSX/PDF.
-- Gestión de aprobadores de comités, edición completa de iniciativas/comités y trazabilidad visual de validaciones.
-- Formularios especializados para los catálogos administrativos que aún usan CRUD genérico y tienen reglas de negocio propias.
-- Ubicaciones, encuestas administrativas y plantillas avanzadas de notificaciones.
+- Gestión de contratos de terceros (cliente/proveedor), pagos, planes de pago y plan de notificaciones.
+- Dashboards analíticos completos por módulo y reportes adicionales con filtros de fecha, SLA, área y responsable.
+- Completar la gestión de aprobadores de comités con trazabilidad visual de validaciones.
+- Formularios especializados para catálogos administrativos que tengan reglas de negocio adicionales.
+- Plantillas avanzadas de notificaciones y envío de correos personalizados.
 
 ## Limitaciones conocidas
 
 - Las migraciones de línea base solo verifican tablas existentes y no sustituyen los dumps ni deben ejecutarse automáticamente en producción.
 - IMAP tiene prueba unitaria de regla, remitente, creación y asignación; falta cobertura contra servidor IMAP simulado o real.
 - Las pruebas de integración requieren una copia MySQL del esquema Ikaros para comprobar relaciones, triggers y datos de tenant reales.
+- Contratos, pagos y planes de pago aún no tienen interfaz administrativa migrante; requieren formularios especializados por el volumen de campos relacionados.
+
+## Resumen de la sesión
+
+Se completaron los siguientes módulos operativos:
+
+- **Comités**: Selección de iniciativa, creación, edición y desactivación; gestión de aprobadores con bloqueo de duplicados.
+- **Horas**: Persistencia de confirmación, validador, fecha y seguimiento; bloqueo de duplicadas en interfaz.
+- **Ubicaciones**: Gestión de ubicaciones por departamento desde configuración administrativa.
+- **Encuesta de satisfacción**: Configuración de preguntas activas desde configuración.
+- **Encuesta de terceros**: Configuración diferenciada de preguntas por cliente/proveedor.
+- **Terceros**: Corrección para no enviar encuestas de cliente a proveedores; muestra puntajes correspondientes.
+
+Todos los cambios mantienen la integridad del esquema existente sin aplicar migraciones a producción.
 
 ## Comandos de validación
 

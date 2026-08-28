@@ -20,6 +20,8 @@ import CommitteesPage from '../initiatives/CommitteesPage'
 import CompanyModulesPage from '../companies/CompanyModulesPage'
 import ReportsPage from '../reports/ReportsPage'
 import TrainingPage from '../training/TrainingPage'
+import LocationsPage from '../settings/LocationsPage'
+import ThirdPartySurveyQuestionsPage from '../settings/ThirdPartySurveyQuestionsPage'
 
 export default function ModulePage({ definition }: { definition: ModuleDefinition }) {
   if (definition.path === 'proyectos') return <ProjectsPage />
@@ -37,6 +39,8 @@ export default function ModulePage({ definition }: { definition: ModuleDefinitio
   if (definition.path === 'activos') return <AssetIndexPage definition={definition} />
   if (definition.path === 'config/areas') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre', 'capacidad_atencion']} />
   if (definition.path === 'config/departamentos') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre']} />
+  if (definition.path === 'config/ubicaciones') return <LocationsPage />
+  if (definition.path === 'config/encuesta-terceros') return <ThirdPartySurveyQuestionsPage />
   if (definition.path === 'config/categorias') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['id_area', 'nombre']} />
   if (definition.path === 'config/subcategorias') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['id_categoria', 'nombre']} />
   if (definition.path.startsWith('config/')) return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre']} />
