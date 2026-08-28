@@ -165,6 +165,17 @@ export const mailApi = {
   checkSmtp: (email: string) => api.post('/checkSMTP', { email }).then(({ data }) => data),
 }
 
+export const notificationApi = {
+  initiative: (id: number) => api.post('/notificarValidacionIniciativa', { id }).then(({ data }) => data),
+  committee: (id: number, idUser: number) => api.post('/notificarComite', { id, idUser }).then(({ data }) => data),
+}
+
+export const initiativeApi = {
+  status: (id: number, uuid: string) => api.get('/getEstadoSolicitudValidacion', { params: { id }, headers: { 'X-UUID': uuid } }).then(({ data }) => data),
+  saveValidation: (id: number, data: Record<string, unknown>, uuid: string) => api.post('/guardarValidacionIniciativa', { id, data }, { headers: { 'X-UUID': uuid } }).then(({ data: response }) => response),
+  saveFollowup: (data: Record<string, unknown>, uuid: string) => api.post('/guardarValidacionIniciativaSeguimiento', { data }, { headers: { 'X-UUID': uuid } }).then(({ data: response }) => response),
+}
+
 export const policyApi = {
   current: () => api.get<Record<string, unknown>[]>('/getPoliticasSeguridad').then(({ data }) => data),
 }

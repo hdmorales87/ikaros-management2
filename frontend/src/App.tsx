@@ -1,20 +1,92 @@
 import { FormEvent, useState } from 'react'
-import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom'
 import { checkCompany, login } from './api'
 import { AuthProvider, useAuth } from './auth'
 import { ClientSurveyPage, PasswordPage, RejectPage, SatisfactionPage } from './public-pages'
-import RequestPage from './features/requests/RequestPage'
-import RequestDetailPage from './features/requests/RequestDetailPage'
-import UsersPage from './features/users/UsersPage'
-import { moduleDefinitions } from './features/modules/module-config'
-import ModulePage from './features/modules/ModulePage'
-import DashboardPage from './features/dashboard/DashboardPage'
 import ForgotPasswordPage from './features/auth/ForgotPasswordPage'
+import DashboardPage from './features/dashboard/DashboardPage'
+import ModulePage from './features/modules/ModulePage'
+import { moduleDefinitions } from './features/modules/module-config'
+import InitiativeValidationPage from './features/initiatives/InitiativeValidationPage'
+import RequestDetailPage from './features/requests/RequestDetailPage'
+import RequestPage from './features/requests/RequestPage'
+import UsersPage from './features/users/UsersPage'
 
-function LoginPage() { const navigate = useNavigate(); const [username, setUsername] = useState(''); const [password, setPassword] = useState(''); const [documento, setDocumento] = useState(''); const [instalation, setInstalation] = useState(''); const [error, setError] = useState(''); const [loading, setLoading] = useState(false); const needsCompany = !localStorage.getItem('ikaros.uuid') && !import.meta.env.VITE_COMPANY_UUID; async function submit(event: FormEvent) { event.preventDefault(); setError(''); setLoading(true); try { if (needsCompany) await checkCompany(documento, instalation); await login(username, password); navigate('/', { replace: true }) } catch (cause: unknown) { setError(cause instanceof Error ? cause.message : 'No fue posible iniciar sesión.') } finally { setLoading(false) } } return <main className="auth-shell"><form className="auth-card" onSubmit={submit}><div className="brand">IKAROS / MANAGEMENT</div><h1>Acceso al sistema</h1><p className="muted">Gestiona la operación de tu organización.</p>{needsCompany && <><label className="field">Documento de empresa<input value={documento} onChange={(event) => setDocumento(event.target.value)} required /></label><label className="field">Instalación<input value={instalation} onChange={(event) => setInstalation(event.target.value)} required /></label></>}<label className="field">Correo electrónico<input type="email" value={username} onChange={(event) => setUsername(event.target.value)} required autoComplete="username" /></label><label className="field">Contraseña<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required autoComplete="current-password" /></label>{error && <div className="error" role="alert">{error}</div>}<button className="primary" disabled={loading}>{loading ? 'Validando...' : 'Ingresar'}</button></form></main> }
+function LoginPage() {
+  const navigate = useNavigate()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [documento, setDocumento] = useState('')
+  const [instalation, setInstalation] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const needsCompany = !localStorage.getItem('ikaros.uuid') && !import.meta.env.VITE_COMPANY_UUID
 
-function ProtectedLayout() { const navigate = useNavigate(); const { logout, session } = useAuth(); const permissions = new Set(String(session?.permisos || '').split(',').filter(Boolean).map(Number)); const modules = new Set(String(session?.modulos || '').split(',').filter(Boolean).map(Number)); const definitions = moduleDefinitions.filter((definition) => (definition.permission === undefined || permissions.has(definition.permission) || permissions.has(1)) && (definition.module === undefined || modules.size === 0 || modules.has(definition.module))); const canManageUsers = permissions.has(1) || permissions.has(22); return <div className="app-shell"><aside className="sidebar"><div className="brand">IKAROS</div><nav><NavLink className="nav-link" to="/" end>Resumen</NavLink>{canManageUsers && <NavLink className="nav-link" to="/usuarios">Usuarios</NavLink>}<NavLink className="nav-link" to="/solicitudes/nueva">Nueva solicitud</NavLink>{definitions.map((definition) => <NavLink className="nav-link" to={`/${definition.path}`} key={definition.path}>{definition.title}</NavLink>)}</nav><button className="secondary" onClick={() => { logout(); navigate('/login', { replace: true }) }}>Cerrar sesión</button></aside><main className="content"><Routes><Route index element={<DashboardPage />} />{canManageUsers && <Route path="usuarios" element={<UsersPage />} />}<Route path="solicitudes/nueva" element={<RequestPage />} /><Route path="solicitudes/:table/:id" element={<RequestDetailPage />} />{definitions.map((definition) => <Route path={definition.path} element={<ModulePage definition={definition} />} key={definition.path} />)}</Routes></main></div> }
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      if (needsCompany) await checkCompany(documento, instalation)
+      await login(username, password)
+      navigate('/', { replace: true })
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : 'No fue posible iniciar sesión.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return <main className="auth-shell"><form className="auth-card" onSubmit={submit}>
+    <div className="brand">IKAROS / MANAGEMENT</div>
+    <h1>Acceso al sistema</h1>
+    <p className="muted">Gestiona la operación de tu organización.</p>
+    {needsCompany && <><label className="field">Documento de empresa<input value={documento} onChange={(event) => setDocumento(event.target.value)} required /></label><label className="field">Instalación<input value={instalation} onChange={(event) => setInstalation(event.target.value)} required /></label></>}
+    <label className="field">Correo electrónico<input type="email" value={username} onChange={(event) => setUsername(event.target.value)} required autoComplete="username" /></label>
+    <label className="field">Contraseña<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required autoComplete="current-password" /></label>
+    {error && <div className="error" role="alert">{error}</div>}
+    <button className="primary" disabled={loading}>{loading ? 'Validando...' : 'Ingresar'}</button>
+    <NavLink className="back-link" to="/forgot-password">¿Olvidaste tu contraseña?</NavLink>
+  </form></main>
+}
+
+function ProtectedLayout() {
+  const navigate = useNavigate()
+  const { logout, session } = useAuth()
+  const permissions = new Set(String(session?.permisos || '').split(',').filter(Boolean).map(Number))
+  const modules = new Set(String(session?.modulos || '').split(',').filter(Boolean).map(Number))
+  const definitions = moduleDefinitions.filter((definition) =>
+    (definition.permission === undefined || permissions.has(definition.permission) || permissions.has(1)) &&
+    (definition.module === undefined || modules.size === 0 || modules.has(definition.module)),
+  )
+  const canManageUsers = permissions.has(1) || permissions.has(22)
+
+  return <div className="app-shell"><aside className="sidebar"><div className="brand">IKAROS</div><nav>
+    <NavLink className="nav-link" to="/" end>Resumen</NavLink>
+    {canManageUsers && <NavLink className="nav-link" to="/usuarios">Usuarios</NavLink>}
+    <NavLink className="nav-link" to="/solicitudes/nueva">Nueva solicitud</NavLink>
+    {definitions.map((definition) => <NavLink className="nav-link" to={`/${definition.path}`} key={definition.path}>{definition.title}</NavLink>)}
+  </nav><button className="secondary" onClick={() => { logout(); navigate('/login', { replace: true }) }}>Cerrar sesión</button></aside><main className="content"><Routes>
+    <Route index element={<DashboardPage />} />
+    {canManageUsers && <Route path="usuarios" element={<UsersPage />} />}
+    <Route path="solicitudes/nueva" element={<RequestPage />} />
+    <Route path="solicitudes/:table/:id" element={<RequestDetailPage />} />
+    {definitions.map((definition) => <Route path={definition.path} element={<ModulePage definition={definition} />} key={definition.path} />)}
+    <Route path="*" element={<Navigate to="/" replace />} />
+  </Routes></main></div>
+}
 
 function Protected() { return localStorage.getItem('ikaros.token') ? <ProtectedLayout /> : <Navigate to="/login" replace /> }
 
-export default function App() { return <AuthProvider><Routes><Route path="/login" element={<LoginPage />} /><Route path="/forgot-password" element={<ForgotPasswordPage />} /><Route path="/resetPassword/:token/:user/:opcion/:uuid" element={<PasswordPage />} /><Route path="/encuestaSatisfaccion/:idSolicitud/:tabla/:uuid" element={<SatisfactionPage />} /><Route path="/encuestaCliente/:lastId/:idCliente/:uuid" element={<ClientSurveyPage />} /><Route path="/rechazoSolucion/:idSolicitud/:tabla/:idUsuario/:uuid" element={<RejectPage />} /><Route path="/*" element={<Protected />} /></Routes></AuthProvider> }
+export default function App() {
+  return <AuthProvider><Routes>
+    <Route path="/login" element={<LoginPage />} />
+    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+    <Route path="/resetPassword/:token/:user/:opcion/:uuid" element={<PasswordPage />} />
+    <Route path="/encuestaSatisfaccion/:idSolicitud/:tabla/:uuid" element={<SatisfactionPage />} />
+    <Route path="/encuestaCliente/:lastId/:idCliente/:uuid" element={<ClientSurveyPage />} />
+    <Route path="/rechazoSolucion/:idSolicitud/:tabla/:idUsuario/:uuid" element={<RejectPage />} />
+    <Route path="/validarIniciativa/:opc/:idRow/:idComite/:idUser/:uuid" element={<InitiativeValidationPage />} />
+    <Route path="/*" element={<Protected />} />
+  </Routes></AuthProvider>
+}
