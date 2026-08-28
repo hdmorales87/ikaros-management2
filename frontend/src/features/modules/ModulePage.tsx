@@ -16,6 +16,7 @@ import ImapPage from '../settings/ImapPage'
 import SecurityPolicyPage from '../settings/SecurityPolicyPage'
 import ThirdPartiesPage from '../third-parties/ThirdPartiesPage'
 import ThirdPartyContractsPage from '../third-parties/ThirdPartyContractsPage'
+import ContractNotificationsPage from '../third-parties/ContractNotificationsPage'
 import InitiativesPage from '../initiatives/InitiativesPage'
 import CommitteesPage from '../initiatives/CommitteesPage'
 import CommitteeApprovalsPage from '../initiatives/CommitteeApprovalsPage'
@@ -44,6 +45,7 @@ export default function ModulePage({ definition }: { definition: ModuleDefinitio
   if (definition.path === 'config/departamentos') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre']} />
   if (definition.path === 'config/ubicaciones') return <LocationsPage />
   if (definition.path === 'config/encuesta-terceros') return <ThirdPartySurveyQuestionsPage />
+  if (definition.path === 'config/contratos-notificaciones') return <ContractNotificationsPage />
   if (definition.path === 'config/categorias') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['id_area', 'nombre']} />
   if (definition.path === 'config/subcategorias') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['id_categoria', 'nombre']} />
   if (definition.path.startsWith('config/')) return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre']} />

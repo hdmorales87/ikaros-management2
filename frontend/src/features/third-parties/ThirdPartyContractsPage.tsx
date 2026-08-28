@@ -1,6 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getGridRows, gridApi, GridRow } from '../../api'
+import AttachmentPanel from '../files/AttachmentPanel'
 
 type Kind = 'cliente' | 'proveedor'
 
@@ -80,6 +81,19 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
     queryFn: () => selectedContractId ? getGridRows('terceros_contratos_pagos', '', { id_contrato: selectedContractId }, ['numero_factura', 'fecha_factura', 'valor']) : Promise.resolve([]),
     enabled: Boolean(selectedContractId),
   })
+
+  const activeContracts = useMemo(() => (contracts.data ?? []).filter((item) => String(item.estado ?? '').length > 0).length, [contracts.data])
+  const expiringSoon = useMemo(() => (contracts.data ?? []).filter((item) => {
+    const expiry = item.fecha_vencimiento ? new Date(String(item.fecha_vencimiento)) : null
+    if (!expiry || Number.isNaN(expiry.getTime())) return false
+    const diffDays = Math.ceil((expiry.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    return diffDays >= 0 && diffDays <= 30
+  }).length, [contracts.data])
+  const overdue = useMemo(() => (contracts.data ?? []).filter((item) => {
+    const expiry = item.fecha_vencimiento ? new Date(String(item.fecha_vencimiento)) : null
+    if (!expiry || Number.isNaN(expiry.getTime())) return false
+    return expiry.getTime() < Date.now()
+  }).length, [contracts.data])
 
   const terceroMap = useMemo(() => Object.fromEntries((terceros.data ?? []).map((item) => [String(item.id), String(item.razon_social ?? item.nombre_comercial ?? '-') ])), [terceros.data])
 
@@ -200,6 +214,13 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
 
   return <section>
     <div className="topbar"><div><h1>{title}</h1><p className="muted">Gestiona contratos y pagos de {kind === 'cliente' ? 'clientes' : 'proveedores'}.</p></div></div>
+
+    <div className="dashboard-grid">
+      <article className="metric metric-blue"><span className="metric-label">Activos</span><strong>{activeContracts}</strong><span className="muted">contratos con estado definido</span></article>
+      <article className="metric metric-amber"><span className="metric-label">Próximos a vencer</span><strong>{expiringSoon}</strong><span className="muted">en los próximos 30 días</span></article>
+      <article className="metric metric-red"><span className="metric-label">Vencidos</span><strong>{overdue}</strong><span className="muted">contratos caducados</span></article>
+    </div>
+
     <div className="panel">
       <form onSubmit={submit}>
         <div className="form-grid">
@@ -252,33 +273,37 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
     </div>
 
     {selectedContractId && (
-      <div className="panel">
-        <h2>Pagos del contrato #{selectedContractId}</h2>
-        <form onSubmit={submitPayment}>
-          <div className="form-grid">
-            <label className="field">Número factura<input value={paymentForm.numeroFactura} onChange={(event) => setPaymentForm((current) => ({ ...current, numeroFactura: event.target.value }))} /></label>
-            <label className="field">Fecha factura<input type="date" value={paymentForm.fechaFactura} onChange={(event) => setPaymentForm((current) => ({ ...current, fechaFactura: event.target.value }))} /></label>
-            <label className="field">Valor<input type="number" step="0.01" value={paymentForm.valor} onChange={(event) => setPaymentForm((current) => ({ ...current, valor: event.target.value }))} /></label>
-          </div>
-          <button className="primary" disabled={savePayment.isPending}>Registrar pago</button>
-        </form>
+      <>
+        <div className="panel">
+          <h2>Pagos del contrato #{selectedContractId}</h2>
+          <form onSubmit={submitPayment}>
+            <div className="form-grid">
+              <label className="field">Número factura<input value={paymentForm.numeroFactura} onChange={(event) => setPaymentForm((current) => ({ ...current, numeroFactura: event.target.value }))} /></label>
+              <label className="field">Fecha factura<input type="date" value={paymentForm.fechaFactura} onChange={(event) => setPaymentForm((current) => ({ ...current, fechaFactura: event.target.value }))} /></label>
+              <label className="field">Valor<input type="number" step="0.01" value={paymentForm.valor} onChange={(event) => setPaymentForm((current) => ({ ...current, valor: event.target.value }))} /></label>
+            </div>
+            <button className="primary" disabled={savePayment.isPending}>Registrar pago</button>
+          </form>
 
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Factura</th><th>Fecha</th><th>Valor</th><th>Acción</th></tr>
-            </thead>
-            <tbody>
-              {payments.data?.map((item, index) => <tr key={String(item.id ?? index)}>
-                <td>{String(item.numero_factura ?? '-')}</td>
-                <td>{String(item.fecha_factura ?? '-')}</td>
-                <td>{String(item.valor ?? '-')}</td>
-                <td><button className="secondary" onClick={() => item.id && deactivatePayment.mutate(Number(item.id))}>Desactivar</button></td>
-              </tr>)}
-            </tbody>
-          </table>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Factura</th><th>Fecha</th><th>Valor</th><th>Acción</th></tr>
+              </thead>
+              <tbody>
+                {payments.data?.map((item, index) => <tr key={String(item.id ?? index)}>
+                  <td>{String(item.numero_factura ?? '-')}</td>
+                  <td>{String(item.fecha_factura ?? '-')}</td>
+                  <td>{String(item.valor ?? '-')}</td>
+                  <td><button className="secondary" onClick={() => item.id && deactivatePayment.mutate(Number(item.id))}>Desactivar</button></td>
+                </tr>)}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+
+        <AttachmentPanel table="terceros_contratos_adjuntos" id={selectedContractId} />
+      </>
     )}
   </section>
 }
