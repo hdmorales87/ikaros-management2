@@ -142,6 +142,7 @@ export const gridApi = {
   insert: (table: string, data: Record<string, unknown>) => api.post('/dataGrid', { payload: encodePayload({ tabla: table, arrayData: data }) }).then(({ data: response }) => response),
   update: (table: string, data: Record<string, unknown>) => api.put('/dataGrid', { payload: encodePayload({ tabla: table, arrayData: data }) }).then(({ data: response }) => response),
   deactivate: (table: string, id: number) => api.delete('/dataGrid', { data: { payload: encodePayload({ tabla: table, id, actionDelete: 'deactivate' }) } }).then(({ data: response }) => response),
+  remove: (table: string, id: number) => api.delete('/dataGrid', { data: { payload: encodePayload({ tabla: table, id, actionDelete: 'delete' }) } }).then(({ data: response }) => response),
 }
 
 export const publicApi = {
@@ -174,6 +175,7 @@ export const mailApi = {
 export const notificationApi = {
   initiative: (id: number) => api.post('/notificarValidacionIniciativa', { id }).then(({ data }) => data),
   committee: (id: number, idUser: number) => api.post('/notificarComite', { id, idUser }).then(({ data }) => data),
+  clientSurvey: (idCliente: number) => api.post('/linkEncuestaCliente', { idCliente }).then(({ data }) => data),
 }
 
 export const initiativeApi = {

@@ -1,0 +1,8 @@
+import { useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { getGridRows, GridRow, notificationApi } from '../../api'
+
+export default function ThirdPartiesPage({ kind }: { kind: 'cliente' | 'proveedor' }) {
+  const [search, setSearch] = useState(''); const [message, setMessage] = useState(''); const rows = useQuery({ queryKey: ['third-parties', kind, search], queryFn: () => getGridRows('terceros', search, { tipo: kind }, ['razon_social', 'nombre_comercial', 'documento', 'email']) }); const invite = useMutation({ mutationFn: (id: number) => notificationApi.clientSurvey(id), onSuccess: () => setMessage('Invitación enviada correctamente.'), onError: () => setMessage('No fue posible enviar la invitación.') })
+  return <section><div className="topbar"><div><h1>{kind === 'cliente' ? 'Clientes' : 'Proveedores'}</h1><p className="muted">Consulta terceros y envía encuestas de satisfacción.</p></div><input className="search" placeholder="Buscar tercero" value={search} onChange={(event) => setSearch(event.target.value)} /></div><div className="panel">{message && <p className="muted" role="status">{message}</p>}<div className="table-wrap"><table><thead><tr><th>Documento</th><th>Nombre</th><th>Correo</th><th>Acción</th></tr></thead><tbody>{rows.data?.map((row: GridRow, index) => <tr key={String(row.id ?? index)}><td>{String(row.documento ?? '-')}</td><td>{String(row.razon_social ?? row.nombre_comercial ?? '-')}</td><td>{String(row.email ?? '-')}</td><td><button className="secondary" onClick={() => row.id && invite.mutate(row.id)} disabled={invite.isPending}>Enviar encuesta</button></td></tr>)}</tbody></table></div></div></section>
+}

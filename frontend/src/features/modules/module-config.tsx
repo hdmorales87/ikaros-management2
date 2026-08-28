@@ -35,6 +35,8 @@ export const moduleDefinitions: ModuleDefinition[] = [
   { path: 'config/monedas', title: 'Monedas', permission: 57, table: 'monedas', description: 'Monedas disponibles.', columns: ['id', 'nombre', 'activo'] },
   { path: 'config/tipos-documentacion', title: 'Tipos de documentación', permission: 56, table: 'tipos_documentacion', description: 'Tipos de documentos.', columns: ['id', 'nombre', 'activo'] },
   { path: 'config/extensiones', title: 'Extensiones', permission: 87, table: 'extensiones', description: 'Extensiones de archivo permitidas.', columns: ['id', 'nombre', 'activo'] },
+  { path: 'clientes', title: 'Clientes', permission: 62, table: 'terceros', description: 'Clientes de la organización.', columns: ['id', 'documento', 'razon_social', 'email'] },
+  { path: 'proveedores', title: 'Proveedores', permission: 14, table: 'terceros', description: 'Proveedores de la organización.', columns: ['id', 'documento', 'razon_social', 'email'] },
   { path: 'config/empresa', title: 'Empresa', permission: 19, table: 'companies', description: 'Información de la empresa activa.', columns: ['razon_social', 'documento', 'tipo_licencia'] },
   { path: 'config/empresa/modulos', title: 'Módulos de empresa', permission: 19, table: 'companies_modulos', description: 'Funcionalidades activas para la empresa.', columns: ['id_modulo'] },
   { path: 'config/smtp', title: 'SMTP', permission: 21, table: 'smtp', description: 'Prueba de configuración de correo.', columns: ['servidor', 'puerto', 'seguridad_smtp', 'correo'] },
