@@ -39,6 +39,12 @@ button { cursor: pointer; }
 .project-detail { margin-top: 24px; }
 .related-section { margin-top: 24px; }
 .related-section h3 { margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; }
+.gantt-header { display: flex; justify-content: space-between; padding: 0 0 14px 230px; color: #627d98; font-size: .85rem; }
+.gantt-row { display: grid; grid-template-columns: 215px 1fr; gap: 15px; align-items: center; min-height: 58px; border-top: 1px solid #e6eef2; }
+.gantt-label { display: grid; gap: 4px; font-weight: 700; }
+.gantt-label small { color: #627d98; font-weight: 400; }
+.gantt-track { position: relative; height: 28px; border-radius: 4px; background: repeating-linear-gradient(90deg, #f4f7f9 0, #f4f7f9 calc(10% - 1px), #d9e2ec calc(10% - 1px), #d9e2ec 10%); }
+.gantt-bar { position: absolute; top: 5px; height: 18px; min-width: 8px; border-radius: 4px; background: #147d92; }
 .back-link { display: inline-block; margin-bottom: 10px; color: #147d92; font-weight: 700; text-decoration: none; }
 .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .detail-item { display: grid; gap: 5px; padding: 14px; background: #f4f7f9; border-radius: 6px; }
@@ -57,4 +63,4 @@ table { width: 100%; border-collapse: collapse; }
 th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid #e6eef2; }
 th { color: #627d98; font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
 @media (max-width: 900px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 700px) { .app-shell { grid-template-columns: 1fr; } .sidebar { padding: 18px 20px; } .sidebar nav { display: flex; margin-top: 18px; overflow-x: auto; } .content { padding: 24px 16px; } .dashboard-grid { grid-template-columns: 1fr; } .detail-grid { grid-template-columns: 1fr; } .permission-list { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .app-shell { grid-template-columns: 1fr; } .sidebar { padding: 18px 20px; } .sidebar nav { display: flex; margin-top: 18px; overflow-x: auto; } .content { padding: 24px 16px; } .dashboard-grid { grid-template-columns: 1fr; } .detail-grid { grid-template-columns: 1fr; } .permission-list { grid-template-columns: 1fr; } .gantt-header { padding-left: 0; } .gantt-row { grid-template-columns: 1fr; gap: 8px; padding: 12px 0; } }

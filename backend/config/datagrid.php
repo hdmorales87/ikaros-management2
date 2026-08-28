@@ -9,6 +9,6 @@ return [
         'iniciativas', 'iniciativas_comites', 'iniciativas_comites_aprobadores',
         'conocimiento', 'activos', 'activos_tipos', 'departamentos',
         'empresas', 'monedas', 'tipos_documentacion', 'extensiones',
-        'proyectos', 'capacitaciones', 'proyectos_horas_registro', 'solicitudes', 'incidencias_seguimientos', 'servicios_seguimientos', 'dias_festivos', 'log',
+        'proyectos', 'capacitaciones', 'capacitaciones_usuarios', 'proyectos_horas_registro', 'solicitudes', 'incidencias_seguimientos', 'servicios_seguimientos', 'dias_festivos', 'log',
     ],
 ];
