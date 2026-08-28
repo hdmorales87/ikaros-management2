@@ -77,6 +77,7 @@ Route::middleware(['security.headers', 'authenticate.jwt'])->group(function () {
     Route::get('/camposFicha', [App\Http\Controllers\FichaTecnicaController::class, 'campos']);
     Route::get('/valoresFicha', [App\Http\Controllers\FichaTecnicaController::class, 'valores']);
     Route::post('/checkSMTP', [App\Http\Controllers\CorreoController::class, 'checkSMTP']);
+    Route::post('/checkIMAP', [App\Http\Controllers\ImapController::class, 'test'])->middleware('permission:51');
     Route::post('/enviarMailActivacion', [App\Http\Controllers\CorreoController::class, 'enviarMailActivacion']);
     Route::post('/notificarRiesgo', [App\Http\Controllers\NotificationController::class, 'risk']);
     Route::post('/notificarResponsableActividad', [App\Http\Controllers\NotificationController::class, 'activity']);

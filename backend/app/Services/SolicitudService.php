@@ -16,7 +16,7 @@ class SolicitudService
 
     private const MODULE_TABLES = [
         'incidencias' => 'incidencias',
-        'problemas' => 'problemas',
+        'problemas' => 'incidencias',
         'servicios' => 'servicios',
     ];
 
@@ -266,7 +266,7 @@ class SolicitudService
 
         $connection = $this->connection($uuid);
         $table = self::MODULE_TABLES[$validated['modulo']];
-        $id = $connection->table($table)->insertGetId([
+        $request = [
             'id_usuario' => $userId,
             'fecha' => now(),
             'urgencia' => $validated['urgencia'],
@@ -276,7 +276,12 @@ class SolicitudService
             'id_subcategoria' => $validated['subcategoria'],
             'asunto' => strip_tags($validated['asunto']),
             'descripcion' => strip_tags($validated['descripcion']),
-        ]);
+        ];
+        if ($validated['modulo'] === 'problemas') {
+            $request['problema'] = 'true';
+            $request['fecha_problema'] = now();
+        }
+        $id = $connection->table($table)->insertGetId($request);
 
         return (int) $id;
     }

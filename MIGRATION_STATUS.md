@@ -43,7 +43,7 @@ Cubierto funcionalmente:
 
 ## Estado actual
 
-- Backend: 69 rutas API registradas y sin endpoints funcionales ausentes respecto a `backend2`.
+- Backend: 71 rutas API registradas y sin endpoints funcionales ausentes respecto a `backend2`.
 - Frontend: compilación y lint correctos; las features principales están conectadas al backend Laravel.
 - Las rutas administrativas de caché del legado no se exponen por HTTP y deben ejecutarse con Artisan.
 
@@ -71,6 +71,7 @@ El siguiente bloque de migración profunda es proyectos: actividades y subactivi
 - La selección de permisos y módulos carga la configuración actual, pero requiere pruebas con usuarios de cada rol para verificar matrices reales de autorización.
 - Los correos se envían con configuración SMTP tenant, aunque las plantillas de negocio avanzadas aún deben validarse con usuarios destinatarios reales.
 - El esquema tenant no está representado por migraciones locales; las pruebas de integración necesitan bases MySQL de prueba con el esquema de Ikaros.
+- Hay 6 pruebas Feature automatizadas para autenticación, validación y protección de API.
 
 ## Validación
 

@@ -75,6 +75,10 @@ app/
 - ✅ Dependencias actualizadas
 - ✅ Estructura de configuración moderna
 
+## IMAP moderno
+
+La integración usa `webklex/laravel-imap` 6.x y clientes creados en runtime por tenant. La conexión se puede comprobar con `POST /api/checkIMAP` o con `php artisan imap:sync --uuid=<uuid>`. El scheduler ejecuta `imap:sync` cada cinco minutos. En producción, ejecuta el scheduler en un único worker para evitar ejecuciones simultáneas.
+
 ## API Endpoints
 
 ### Autenticación (Públicos)

@@ -12,6 +12,7 @@ import TrainingAttendeesPage from '../training/TrainingAttendeesPage'
 import AssetIndexPage from '../assets/AssetIndexPage'
 import CompanyPage from '../companies/CompanyPage'
 import SmtpPage from '../settings/SmtpPage'
+import ImapPage from '../settings/ImapPage'
 import SecurityPolicyPage from '../settings/SecurityPolicyPage'
 import ThirdPartiesPage from '../third-parties/ThirdPartiesPage'
 import InitiativesPage from '../initiatives/InitiativesPage'
@@ -27,6 +28,7 @@ export default function ModulePage({ definition }: { definition: ModuleDefinitio
   if (definition.path === 'config/empresa') return <CompanyPage />
   if (definition.path === 'config/empresa/modulos') return <CompanyModulesPage />
   if (definition.path === 'config/smtp') return <SmtpPage />
+  if (definition.path === 'config/imap') return <ImapPage />
   if (definition.path === 'config/politicas') return <SecurityPolicyPage />
   if (definition.path === 'iniciativas') return <InitiativesPage />
   if (definition.path === 'iniciativas/comites') return <CommitteesPage />

@@ -16,9 +16,9 @@ class ApiSecurityTest extends TestCase
         $this->postJson('/api/getDataGrid', [])->assertStatus(401);
     }
 
-    public function test_login_validates_required_credentials(): void
+    public function test_company_check_validates_required_fields(): void
     {
-        $this->postJson('/api/login', ['username' => 'invalid', 'password' => 'short'])->assertStatus(422);
+        $this->postJson('/api/checkCompany', [])->assertStatus(422);
     }
 
     public function test_file_download_rejects_missing_authentication(): void

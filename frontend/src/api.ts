@@ -178,6 +178,7 @@ export const companyApi = {
 
 export const mailApi = {
   checkSmtp: (email: string) => api.post('/checkSMTP', { email }).then(({ data }) => data),
+  checkImap: () => api.post('/checkIMAP').then(({ data }) => data as { folders: number }),
 }
 
 export const notificationApi = {
