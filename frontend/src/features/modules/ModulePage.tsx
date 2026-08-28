@@ -15,8 +15,10 @@ import SmtpPage from '../settings/SmtpPage'
 import ImapPage from '../settings/ImapPage'
 import SecurityPolicyPage from '../settings/SecurityPolicyPage'
 import ThirdPartiesPage from '../third-parties/ThirdPartiesPage'
+import ThirdPartyContractsPage from '../third-parties/ThirdPartyContractsPage'
 import InitiativesPage from '../initiatives/InitiativesPage'
 import CommitteesPage from '../initiatives/CommitteesPage'
+import CommitteeApprovalsPage from '../initiatives/CommitteeApprovalsPage'
 import CompanyModulesPage from '../companies/CompanyModulesPage'
 import ReportsPage from '../reports/ReportsPage'
 import TrainingPage from '../training/TrainingPage'
@@ -36,6 +38,7 @@ export default function ModulePage({ definition }: { definition: ModuleDefinitio
   if (definition.path === 'config/politicas') return <SecurityPolicyPage />
   if (definition.path === 'iniciativas') return <InitiativesPage />
   if (definition.path === 'iniciativas/comites') return <CommitteesPage />
+  if (definition.path === 'iniciativas/trazabilidad') return <CommitteeApprovalsPage />
   if (definition.path === 'activos') return <AssetIndexPage definition={definition} />
   if (definition.path === 'config/areas') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre', 'capacidad_atencion']} />
   if (definition.path === 'config/departamentos') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre']} />
@@ -52,7 +55,9 @@ export default function ModulePage({ definition }: { definition: ModuleDefinitio
   if (definition.path === 'reportes') return <ReportsPage />
   if (definition.path === 'capacitaciones/asistentes') return <TrainingAttendeesPage />
   if (definition.path === 'clientes') return <ThirdPartiesPage kind="cliente" />
+  if (definition.path === 'clientes/contratos') return <ThirdPartyContractsPage kind="cliente" />
   if (definition.path === 'proveedores') return <ThirdPartiesPage kind="proveedor" />
+  if (definition.path === 'proveedores/contratos') return <ThirdPartyContractsPage kind="proveedor" />
   if (definition.path === 'config/empresa/modulos') return <CompanyModulesPage />
   if (definition.path === 'config/dias-festivos') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['fecha', 'descripcion']} />
   return <DataGridPage config={definition} />
