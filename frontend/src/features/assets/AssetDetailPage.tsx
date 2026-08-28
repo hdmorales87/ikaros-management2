@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
-import { getGridRows, gridApi, GridRow } from '../../api'
+import { getGridRows, gridApi } from '../../api'
 import AttachmentPanel from '../files/AttachmentPanel'
 import TechnicalSheetPanel from '../technical-sheets/TechnicalSheetPanel'
 

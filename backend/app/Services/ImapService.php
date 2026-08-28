@@ -80,7 +80,7 @@ class ImapService
         };
     }
 
-    private function createRequestFromMessage(Connection $connection, object $account, string $document, string $uuid, object $message): void
+    protected function createRequestFromMessage(Connection $connection, object $account, string $document, string $uuid, object $message): void
     {
         $subjectParts = array_map('trim', explode(':', (string) $message->getSubject(), 3));
         if (count($subjectParts) < 2 || $subjectParts[0] !== $document || $subjectParts[1] === '') {
@@ -123,6 +123,9 @@ class ImapService
 
     private function storeAttachments(Connection $connection, object $message, string $uuid, int $requestId, string $module, int $userId): void
     {
+        $attachments = $message->getAttachments();
+        if (count($attachments) === 0) return;
+
         $table = $module === 'servicios' ? 'servicios' : 'incidencias';
         $directory = 'imap/'.$uuid.'/'.$table.'_adjuntos';
         $disk = Storage::disk('public');
@@ -131,7 +134,7 @@ class ImapService
         $maxSize = (int) config('imap.max_attachment_size');
         $allowedExtensions = array_map('strtolower', config('imap.allowed_extensions'));
 
-        foreach ($message->getAttachments() as $index => $attachment) {
+        foreach ($attachments as $index => $attachment) {
             $content = (string) $attachment->getContent();
             $size = strlen($content);
             $originalName = (string) $attachment->getName();

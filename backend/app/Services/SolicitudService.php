@@ -50,7 +50,8 @@ class SolicitudService
         if ((int) $data['estado'] === 3) $updates['fecha_solucion_'.$option] = now();
         if ($option === 'problema' && isset($data['causaProblema'])) $updates['causa'] = $data['causaProblema'];
         if ((int) $data['estado'] === 2 && (int) ($data['estadoActual'] ?? 0) === 1) {
-            $sla = $this->calculateSla($connection, (int) $data['idRow'], $table, $option, (int) $request->prioridad);
+            $priority = (int) $connection->table($table)->where('id', $data['idRow'])->value('prioridad');
+            $sla = $this->calculateSla($connection, (int) $data['idRow'], $table, $option, $priority);
             if ($sla === null) return ['msg' => 'no_sla'];
             $updates['fecha_proceso_'.$option] = $sla['started_at'];
             $updates['fecha_vencimiento_'.$option] = $sla['due_at'];

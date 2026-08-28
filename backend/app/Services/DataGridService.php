@@ -53,7 +53,9 @@ class DataGridService
         $table = $this->table($payload['tabla'] ?? '');
         $data = $this->data($payload['arrayData'] ?? []);
         unset($data['id']);
-        $id = $this->connection($uuid)->table($table)->insertGetId($data);
+        $connection = $this->connection($uuid);
+        $this->validateProjectSchedule($connection, $table, $data);
+        $id = $connection->table($table)->insertGetId($data);
 
         return ['msg' => 'success', 'insertId' => $id];
     }
@@ -66,7 +68,9 @@ class DataGridService
         $id = (int) ($data['id'] ?? 0);
         unset($data['id']);
         abort_if($id < 1, 422, 'El identificador es obligatorio.');
-        $this->connection($uuid)->table($table)->where('id', $id)->update($data);
+        $connection = $this->connection($uuid);
+        $this->validateProjectSchedule($connection, $table, $data, $id);
+        $connection->table($table)->where('id', $id)->update($data);
 
         return ['msg' => 'success'];
     }
@@ -119,6 +123,24 @@ class DataGridService
             $this->column((string) $key);
         }
         return $data;
+    }
+
+    private function validateProjectSchedule(Connection $connection, string $table, array $data, int $id = 0): void
+    {
+        if (!in_array($table, ['proyectos_actividades', 'proyectos_subactividades'], true)) return;
+
+        $current = $id > 0 ? (array) $connection->table($table)->where('id', $id)->first() : [];
+        abort_if($id > 0 && $current === [], 404, 'El registro no existe.');
+        $values = array_merge($current, $data);
+        if (empty($values['fecha_inicio']) || empty($values['fecha_final'])) return;
+        abort_if($values['fecha_final'] < $values['fecha_inicio'], 422, 'La fecha final debe ser posterior a la fecha inicial.');
+
+        $projectId = $table === 'proyectos_actividades'
+            ? (int) ($values['id_proyecto'] ?? 0)
+            : (int) $connection->table('proyectos_actividades')->where('id', $values['id_actividad'] ?? 0)->value('id_proyecto');
+        $project = $connection->table('proyectos')->where('id', $projectId)->first(['fecha_inicio', 'fecha_final']);
+        abort_if(!$project, 422, 'El proyecto asociado no existe.');
+        abort_if($values['fecha_inicio'] < $project->fecha_inicio || $values['fecha_final'] > $project->fecha_final, 422, 'Las fechas deben estar dentro del periodo del proyecto.');
     }
 
     private function connection(string $uuid): Connection

@@ -134,8 +134,9 @@ function encodePayload(value: unknown): string {
   return btoa(binary)
 }
 
-export async function getGridRows(table: string, searchWord = '', filters: Record<string, unknown> = {}, searchFields: ReadonlyArray<string> = ['nombre']): Promise<GridRow[]> {
-  const payload = encodePayload({ searchWord, filters, showRecords: 100, offsetRecord: 0, date1: '', date2: '', sqlParams: { fieldSearch: searchFields }, tabla: table, mode: 'rows' })
+export async function getGridRows(table: string, searchWord = '', filters: Record<string, unknown> = {}, searchFields: ReadonlyArray<string> = ['nombre'], columns: ReadonlyArray<string> = []): Promise<GridRow[]> {
+  const sqlParams = { fieldSearch: searchFields, ...(columns.length > 0 ? { sqlCols: columns } : {}) }
+  const payload = encodePayload({ searchWord, filters, showRecords: 100, offsetRecord: 0, date1: '', date2: '', sqlParams, tabla: table, mode: 'rows' })
   const { data } = await api.post<GridRow[]>('/getDataGrid', { payload })
   return data
 }
