@@ -1,0 +1,19 @@
+{
+  "fondoMenu": "#102a43",
+  "iconosAyuda": "#147d92",
+  "fondoCabecera": "#102a43",
+  "fondoBotonGrilla": "#147d92",
+  "windowColor": "#147d92",
+  "hoverColor": "#0f6b7b",
+  "maxAvatarSize": 520000,
+  "maxDocumentsSize": 5242880,
+  "apiRoute": "http://localhost:8000/api/",
+  "filesRoute": "http://localhost:8000/api/downloadFile/",
+  "instalacion": "local",
+  "mainPath": "",
+  "uuidIMA": "",
+  "applicationID": "",
+  "applicationKEY": "",
+  "modulos": [],
+  "control_panel": []
+}

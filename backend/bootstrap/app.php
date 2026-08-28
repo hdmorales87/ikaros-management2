@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'security.headers' => \App\Http\Middleware\SecurityHeaders::class,
             'authenticate.jwt' => \App\Http\Middleware\AuthenticateJwt::class,
+            'permission' => \App\Http\Middleware\RequirePermission::class,
         ]);
         
         $middleware->api(prepend: [

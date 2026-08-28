@@ -72,4 +72,19 @@ class CompanyService
             return ['msg' => 'error', 'detail' => $e->getMessage()];
         }
     }
+
+    public function chatbotMenu(string $uuid): array
+    {
+        $company = Company::where('uuid', $uuid)->first(['id']);
+        if (!$company) return [];
+        return DB::connection('ikarosof_management_acceso')->table('companies_chatbot_options as options')
+            ->select('master.id as opcion', 'master.descripcion', DB::raw('LOWER(modules.nombre) as modulo'), 'master.orden')
+            ->join('chatbot_options_maestro as master', 'master.id', '=', 'options.id_opcion')
+            ->join('companies_modulos as company_modules', function ($join): void {
+                $join->on('company_modules.id_empresa', '=', 'options.id_empresa')->on('company_modules.id_modulo', '=', 'master.id_modulo');
+            })
+            ->join('modulos as modules', 'modules.id', '=', 'master.id_modulo')
+            ->where('options.id_empresa', $company->id)->where('options.activo', 1)->where('company_modules.activo', 1)
+            ->orderBy('master.orden')->get()->map(fn ($row) => (array) $row)->all();
+    }
 }

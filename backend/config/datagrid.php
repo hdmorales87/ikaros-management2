@@ -1,0 +1,13 @@
+<?php
+
+return [
+    'tables' => [
+        'users', 'roles', 'permisos', 'terceros', 'areas_servicio',
+        'areas_servicio_categorias', 'areas_servicio_subcategorias',
+        'categorias', 'subcategorias', 'incidencias', 'problemas', 'servicios',
+        'proyectos_actividades', 'proyectos_subactividades', 'proyectos_riesgos',
+        'conocimiento', 'activos', 'activos_tipos', 'departamentos',
+        'empresas', 'monedas', 'tipos_documentacion', 'extensiones',
+        'proyectos', 'capacitaciones', 'proyectos_horas_registro', 'solicitudes', 'incidencias_seguimientos', 'servicios_seguimientos', 'dias_festivos', 'log',
+    ],
+];

@@ -1,0 +1,19 @@
+import { FormEvent, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { requestQueries } from './request-api'
+
+type Option = { id: number; nombre: string }
+
+function Options({ items }: { items?: Option[] }) {
+  return <><option value="0">Selecciona una opción</option>{items?.map((item) => <option key={item.id} value={item.id}>{item.nombre}</option>)}</>
+}
+
+export default function RequestPage() {
+  const [module, setModule] = useState('incidencias'); const [area, setArea] = useState(0); const [category, setCategory] = useState(0); const [subcategory, setSubcategory] = useState(0); const [urgency, setUrgency] = useState(0); const [impact, setImpact] = useState(0); const [subject, setSubject] = useState(''); const [description, setDescription] = useState(''); const [message, setMessage] = useState('')
+  const areas = useQuery({ queryKey: ['request-areas', module], queryFn: () => requestQueries.areas(module) }); const categories = useQuery({ queryKey: ['request-categories', area], queryFn: () => requestQueries.categories(area), enabled: area > 0 }); const subcategories = useQuery({ queryKey: ['request-subcategories', category], queryFn: () => requestQueries.subcategories(category), enabled: category > 0 }); const urgencies = useQuery({ queryKey: ['urgencies'], queryFn: requestQueries.urgencies }); const impacts = useQuery({ queryKey: ['impacts'], queryFn: requestQueries.impacts })
+  async function submit(event: FormEvent) { event.preventDefault(); setMessage(''); try { await requestQueries.create({ modulo: module, area, categoria: category, subcategoria: subcategory, urgencia: urgency, impacto: impact, asunto: subject, descripcion: description }); setMessage('Solicitud creada correctamente.'); setSubject(''); setDescription('') } catch { setMessage('No fue posible crear la solicitud.') } }
+  function changeModule(value: string) { setModule(value); setArea(0); setCategory(0); setSubcategory(0) }
+  function changeArea(value: number) { setArea(value); setCategory(0); setSubcategory(0) }
+  function changeCategory(value: number) { setCategory(value); setSubcategory(0) }
+  return <section><div className="topbar"><div><h1>Nueva solicitud</h1><p className="muted">Registra una incidencia, problema o servicio.</p></div></div><form className="panel request-form" onSubmit={submit}><div className="form-grid"><label className="field">Tipo<select value={module} onChange={(event) => changeModule(event.target.value)}><option value="incidencias">Incidencia</option><option value="problemas">Problema</option><option value="servicios">Servicio</option></select></label><label className="field">Urgencia<select value={urgency} onChange={(event) => setUrgency(Number(event.target.value))} required><Options items={urgencies.data} /></select></label><label className="field">Impacto<select value={impact} onChange={(event) => setImpact(Number(event.target.value))} required><Options items={impacts.data} /></select></label><label className="field">Área<select value={area} onChange={(event) => changeArea(Number(event.target.value))} required><Options items={areas.data} /></select></label><label className="field">Categoría<select value={category} onChange={(event) => changeCategory(Number(event.target.value))} required><Options items={categories.data} /></select></label><label className="field">Subcategoría<select value={subcategory} onChange={(event) => setSubcategory(Number(event.target.value))} required><Options items={subcategories.data} /></select></label></div><label className="field">Asunto<input value={subject} onChange={(event) => setSubject(event.target.value)} required maxLength={255} /></label><label className="field">Descripción<textarea value={description} onChange={(event) => setDescription(event.target.value)} required rows={6} /></label>{message && <p className="muted" role="status">{message}</p>}<button className="primary" type="submit">Crear solicitud</button></form></section>
+}

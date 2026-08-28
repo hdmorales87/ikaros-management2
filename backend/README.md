@@ -1,54 +1,31 @@
-# Ikaros Management Backend
+# Estado de migración del backend
 
+Este backend Laravel 13 está migrando progresivamente la lógica de `ikaros-management/backend2`.
+
+- Usuarios y permisos de roles.
+- Catálogos y creación de solicitudes.
+
+Datagrid, activos, ficha técnica, correo, terceros y operaciones avanzadas de solicitudes aún requieren completar el contrato de sus tablas tenant. En el legado, varias de estas operaciones reciben nombres de tabla y columnas directamente desde el cliente; antes de migrarlas se debe definir una lista blanca por operación para evitar consultas arbitrarias.
 Backend API del sistema Ikaros Management migrado a Laravel 13 con PHP 8.3.
 
-## Características
-
-- **Framework**: Laravel 13.29.0
-- **PHP**: 8.3.33
 - **Autenticación**: JWT (Firebase JWT v7.1.0)
 - **Base de datos**: MySQL con soporte multi-tenant
 - **Arquitectura**: Service Layer Pattern
 - **Validación**: Form Request Validation
-- **Seguridad**: Headers de seguridad, bcrypt para contraseñas
-
-## Requisitos
-
 - PHP >= 8.3
 - Composer
-- MySQL >= 5.7
-- Apache o Nginx
-- Bases de datos multitenant ya creadas (servicedesk0, ikarosof_management0, ikarosof_management_acceso)
 
 ## Instalación
-
-1. Clonar el repositorio o copiar los archivos al directorio del proyecto
 2. Instalar dependencias:
-```bash
-composer install
-```
-
-3. Configurar el archivo `.env`:
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-4. Configurar conexión a base de datos en `.env` (usar la BD global):
-```
-DB_CONNECTION=ikarosof_management_acceso
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=ikarosof_management_acceso
-DB_USERNAME=root
-DB_PASSWORD=tu_password_mysql
-```
 
 5. Configurar clave JWT:
-```
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-JWT_TTL=28800
-```
 
 6. Las conexiones multitenant ya están configuradas en `config/database.php`:
    - `servicedesk0` - Base de datos principal de service desk

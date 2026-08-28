@@ -18,7 +18,8 @@ class AuthController extends Controller
 
     public function checkUsername(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
+        $username = $request->route('username', $request->input('username'));
+        $validator = Validator::make(['username' => $username], [
             'username' => 'required|email',
         ]);
 
@@ -30,7 +31,7 @@ class AuthController extends Controller
         }
 
         $uuid = $request->header('x-uuid');
-        $result = $this->userService->checkUsername($request->username, $uuid);
+        $result = $this->userService->checkUsername($username, $uuid);
 
         return response()->json($result);
     }

@@ -1,0 +1,13 @@
+import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { getGridRows, requestApi, GridRow } from '../../api'
+import { Link } from 'react-router-dom'
+
+const columns = ['id', 'asunto', 'estado', 'prioridad']
+
+export default function RequestBoardPage({ table, title, type, filter = {} }: { table: string; title: string; type: string; filter?: Record<string, unknown> }) {
+  const [search, setSearch] = useState(''); const [message, setMessage] = useState(''); const queryClient = useQueryClient(); const rows = useQuery({ queryKey: ['request-board', table, search, filter], queryFn: () => getGridRows(table, search, filter, ['asunto', 'descripcion']) })
+  const assign = useMutation({ mutationFn: (id: number) => requestApi.assign(id, type), onSuccess: (data) => { setMessage(data.msg === 'success' ? 'Solicitud asignada correctamente.' : `Resultado: ${data.msg}`); queryClient.invalidateQueries({ queryKey: ['request-board'] }) }, onError: () => setMessage('No fue posible asignar la solicitud.') })
+  const manage = useMutation({ mutationFn: (id: number) => requestApi.manage({ tabla: table, opcion: type, idRow: id, estado: 2, estadoActual: 1, name_estado: 'En proceso', observacion: 'Solicitud puesta en proceso.' }), onSuccess: () => { setMessage('Solicitud actualizada.'); queryClient.invalidateQueries({ queryKey: ['request-board'] }) }, onError: () => setMessage('No fue posible actualizar la solicitud.') })
+  return <section><div className="topbar"><div><h1>{title}</h1><p className="muted">Gestiona solicitudes y asignaciones.</p></div><input className="search" placeholder="Buscar" value={search} onChange={(event) => setSearch(event.target.value)} /></div><div className="panel">{message && <p className="muted" role="status">{message}</p>}{rows.isLoading && <p className="muted">Cargando solicitudes...</p>}{rows.isError && <div className="error">No fue posible cargar las solicitudes.</div>}{rows.data && <div className="table-wrap"><table><thead><tr>{columns.map((column) => <th key={column}>{column}</th>)}<th>Acciones</th></tr></thead><tbody>{rows.data.map((row: GridRow, index) => <tr key={String(row.id ?? index)}>{columns.map((column) => <td key={column}>{String(row[column] ?? '-')}</td>)}<td><Link className="secondary" to={`/solicitudes/${table}/${row.id}`}>Detalle</Link><button className="secondary" onClick={() => row.id && assign.mutate(row.id)} disabled={assign.isPending}>Asignar</button><button className="secondary" onClick={() => row.id && manage.mutate(row.id)} disabled={manage.isPending}>En proceso</button></td></tr>)}</tbody></table></div>}</div></section>
+}

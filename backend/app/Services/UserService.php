@@ -11,6 +11,60 @@ use App\Helpers\JwtAuth;
 
 class UserService
 {
+    public function listUsers(string $uuid): array
+    {
+        $connection = (new Company())->getConnectionByUUID($uuid);
+
+        return $connection->table('users')
+            ->select(['id', 'nombre', 'apellido', 'email', 'id_rol', 'activo', 'acceso_sistema'])
+            ->orderBy('nombre')
+            ->get()
+            ->map(fn ($user) => (array) $user)
+            ->all();
+    }
+
+    public function findUser(int $id, string $uuid): ?array
+    {
+        $connection = (new Company())->getConnectionByUUID($uuid);
+        $user = $connection->table('users')
+            ->select(['id', 'nombre', 'segundo_nombre', 'apellido', 'segundo_apellido', 'email', 'id_rol', 'activo', 'acceso_sistema'])
+            ->where('id', $id)
+            ->first();
+
+        return $user ? (array) $user : null;
+    }
+
+    public function createUser(array $data, string $uuid): array
+    {
+        $connection = (new Company())->getConnectionByUUID($uuid);
+        $data['password'] = Hash::make($data['password']);
+        $data['fecha_cambio_password'] = now();
+        $data['intentos_login'] = 0;
+        $data['activo'] = $data['activo'] ?? 1;
+        $data['acceso_sistema'] = $data['acceso_sistema'] ?? 1;
+        $id = $connection->table('users')->insertGetId($data);
+
+        return $this->findUser((int) $id, $uuid) ?? [];
+    }
+
+    public function updateUser(int $id, array $data, string $uuid): ?array
+    {
+        $connection = (new Company())->getConnectionByUUID($uuid);
+        if (array_key_exists('password', $data)) {
+            $data['password'] = Hash::make($data['password']);
+        }
+        $connection->table('users')->where('id', $id)->update($data);
+
+        return $this->findUser($id, $uuid);
+    }
+
+    public function deleteUser(int $id, string $uuid): bool
+    {
+        $connection = (new Company())->getConnectionByUUID($uuid);
+
+        return $connection->table('users')->where('id', $id)->delete() > 0;
+    }
+
     public function checkUsername(string $userName, string $uuid): array
     {
         try {
@@ -54,11 +108,13 @@ class UserService
             }
 
             $user = $connection->table('users')
-                ->select('id_rol')
                 ->where('activo', 1)
                 ->where('email', $username)
-                ->where('password', Hash::make($password))
                 ->first();
+
+            if (!$user || !Hash::check($password, $user->password)) {
+                return $this->acumularIntentosLogin($username, $uuid);
+            }
 
             if ($user && !($user->id_rol > 0)) {
                 return ['msg' => 'role_not_asigned', 'code' => 401];
@@ -197,8 +253,7 @@ class UserService
             $results = $connection->table('users AS U')
                 ->select('U.intentos_login', 'PS.intentos_login AS intentos_permitidos')
                 ->leftJoin('politicas_seguridad AS PS', 'PS.activo', '=', 'U.activo')
-                ->where('U.email', $username)
-                ->first();
+                ->where('u.email', $username)
 
             if ($results) {
                 if ($results->intentos_permitidos > 0) {

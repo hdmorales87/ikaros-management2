@@ -6,9 +6,51 @@ use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use App\Services\CompanyService;
 
 class CompanyController extends Controller
 {
+    public function __construct(private readonly CompanyService $companyService)
+    {
+    }
+
+    public function sincronizarEmpresa(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'documento' => ['required', 'string'],
+            'data' => ['required', 'array'],
+            'data.tipo_licencia' => ['required'],
+            'data.fecha_vencimiento_licencia' => ['required', 'date'],
+            'data.maximo_usuarios' => ['required', 'integer'],
+            'data.cuota_almacenamiento' => ['required', 'integer'],
+        ]);
+
+        return response()->json($this->companyService->sincronizarEmpresa((object) $data));
+    }
+
+    public function guardaModulos(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'idRow' => ['required', 'integer'],
+            'arrayModulos' => ['present', 'array'],
+            'arrayModulos.*' => ['integer'],
+        ]);
+
+        return response()->json($this->companyService->guardaModulos((object) $data));
+    }
+
+    public function crearDirectorios(Request $request): JsonResponse
+    {
+        $data = $request->validate(['idEmpresa' => ['required', 'integer']]);
+
+        return response()->json($this->companyService->crearDirectorios((object) $data));
+    }
+
+    public function getChatbotMenu(Request $request): JsonResponse
+    {
+        return response()->json($this->companyService->chatbotMenu((string) $request->header('x-uuid', '')));
+    }
+
     public function checkCompany(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [

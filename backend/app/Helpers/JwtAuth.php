@@ -36,7 +36,13 @@ class JwtAuth
                 $jwt = JWT::encode($token, $this->key, 'HS256');
                 
                 if (is_null($getToken)) {
-                    return (object) ['token' => $jwt];
+                    return (object) [
+                        'token' => $jwt,
+                        'userData' => $user->userData,
+                        'companyData' => $user->companyData,
+                        'permisos' => $user->permisos,
+                        'modulos' => $user->modulos,
+                    ];
                 }
                 
                 $decoded = JWT::decode($jwt, new Key($this->key, 'HS256'));

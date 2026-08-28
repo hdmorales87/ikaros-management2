@@ -1,0 +1,30 @@
+import DataGridPage from '../grid/DataGridPage'
+import { ModuleDefinition } from './module-config'
+import CatalogPage from '../catalogs/CatalogPage'
+import RolesPage from '../roles/RolesPage'
+import RequestBoardPage from '../requests/RequestBoardPage'
+import HoursPage from '../hours/HoursPage'
+import KnowledgePage from '../knowledge/KnowledgePage'
+import ProjectsPage from '../projects/ProjectsPage'
+import CompanyPage from '../companies/CompanyPage'
+import SmtpPage from '../settings/SmtpPage'
+
+export default function ModulePage({ definition }: { definition: ModuleDefinition }) {
+  if (definition.path === 'config/areas') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre', 'capacidad_atencion']} />
+  if (definition.path === 'config/departamentos') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre']} />
+  if (definition.path === 'config/categorias') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['id_area', 'nombre']} />
+  if (definition.path === 'config/subcategorias') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['id_categoria', 'nombre']} />
+  if (definition.path.startsWith('config/')) return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre']} />
+  if (definition.path === 'config/roles') return <RolesPage />
+  if (definition.path === 'incidencias') return <RequestBoardPage table="incidencias" type="incidencia" title={definition.title} />
+  if (definition.path === 'problemas') return <RequestBoardPage table="incidencias" type="problema" title={definition.title} filter={{ problema: true }} />
+  if (definition.path === 'servicios') return <RequestBoardPage table="servicios" type="servicio" title={definition.title} />
+  if (definition.path === 'proyectos') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['codigo', 'nombre']} />
+  if (definition.path === 'capacitaciones') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre', 'instructor', 'lugar']} />
+  if (definition.path === 'horas') return <HoursPage />
+  if (definition.path === 'conocimiento') return <KnowledgePage />
+  if (definition.path === 'proyectos') return <ProjectsPage />
+  if (definition.path === 'config/empresa') return <CompanyPage />
+  if (definition.path === 'config/smtp') return <SmtpPage />
+  return <DataGridPage config={definition} />
+}
