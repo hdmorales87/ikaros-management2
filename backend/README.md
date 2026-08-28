@@ -1,127 +1,149 @@
-# Estado de migración del backend
+# Backend Laravel 13 - Ikaros Management
 
-Este backend Laravel 13 está migrando progresivamente la lógica de `ikaros-management/backend2`.
+Backend de la migración funcional del sistema Ikaros Management hacia Laravel 13, con capa de servicios, JWT, control de permisos y soporte multi-tenant.
 
-- Usuarios y permisos de roles.
-- Catálogos y creación de solicitudes.
+## Objetivo
 
-Datagrid, activos, ficha técnica, correo, terceros y operaciones avanzadas de solicitudes aún requieren completar el contrato de sus tablas tenant. En el legado, varias de estas operaciones reciben nombres de tabla y columnas directamente desde el cliente; antes de migrarlas se debe definir una lista blanca por operación para evitar consultas arbitrarias.
-Backend API del sistema Ikaros Management migrado a Laravel 13 con PHP 8.3.
+Reemplazar la lógica de negocio del sistema legado con una API moderna, compatible con la base de datos existente, manteniendo la estructura del negocio y evitando cambios destructivos sobre producción.
 
-- **Autenticación**: JWT (Firebase JWT v7.1.0)
-- **Base de datos**: MySQL con soporte multi-tenant
-- **Arquitectura**: Service Layer Pattern
-- **Validación**: Form Request Validation
-- PHP >= 8.3
-- Composer
+## Stack
 
-## Instalación
-2. Instalar dependencias:
-```bash
-cp .env.example .env
-php artisan key:generate
+- Laravel 13
+- PHP 8.3+
+- MySQL
+- JWT
+- Eloquent + Query Builder
+- Servicios y controladores por módulo
+- Middleware de autenticación y permisos
+- IMAP / SMTP / file handling
+
+## Estado de migración
+
+El backend ya cubre la mayor parte del negocio operativo del sistema, incluyendo:
+
+- autenticación, usuarios, roles, permisos y compañía
+- solicitudes, SLA y trazabilidad
+- activos, ficha técnica y gestión operativa
+- proyectos, actividades, subactividades y riesgos
+- capacitación, asistentes y confirmación
+- iniciativas, comités y aprobación
+- horas por proyecto con validación
+- ubicaciones y configuración
+- encuestas, terceros, contratos, pagos y adjuntos
+- dashboard y reportes
+- lista blanca de tablas para acceso controlado a datagrids
+
+## Estructura principal
+
+```text
+backend/
+├── app/
+│   ├── Http/
+│   ├── Models/
+│   ├── Services/
+│   ├── Providers/
+│   ├── Policies/
+│   └── ...
+├── config/
+├── database/
+├── routes/
+├── public/
+├── storage/
+├── tests/
+├── .env.example
+├── artisan
+├── composer.json
+├── phpunit.xml
+├── vite.config.js
+└── README.md
 ```
 
-DB_HOST=127.0.0.1
-DB_PORT=3306
+## Instalación
 
-5. Configurar clave JWT:
-
-6. Las conexiones multitenant ya están configuradas en `config/database.php`:
-   - `servicedesk0` - Base de datos principal de service desk
-   - `ikarosof_management0` - Base de datos de gestión
-   - `ikarosof_management_acceso` - Base de datos global (default)
-
-7. Iniciar servidor de desarrollo:
 ```bash
+cd backend
+cp .env.example .env
+composer install
+php artisan key:generate
 php artisan serve
 ```
 
-## Estructura del Proyecto
+Asegúrate de configurar la conexión a MySQL y los parámetros de JWT / correo / IMAP según tu entorno.
 
-```
-app/
-├── Http/
-│   ├── Controllers/      # Controladores API
-│   └── Middleware/       # Middleware personalizados
-├── Models/              # Modelos Eloquent
-├── Services/            # Lógica de negocio
-└── Helpers/             # Helpers (JWT, etc.)
-```
+## Configuración relevante
 
-## Mejoras Implementadas
+- DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD
+- JWT secret y configuración de auth
+- SMTP y mailer
+- IMAP tenant-aware
+- storage y archivos adjuntos
 
-### Seguridad
-- ✅ Reemplazo de MD5 por bcrypt para contraseñas
-- ✅ JWT key en .env en lugar de hardcoded
-- ✅ Headers de seguridad (CORS, XSS, etc.)
-- ✅ Validación de requests con Form Request Validation
+## Integraciones implementadas
 
-### Arquitectura
-- ✅ Service Layer Pattern para separar lógica de negocio
-- ✅ Type hints y return types
-- ✅ Relaciones Eloquent en modelos
-- ✅ Uso de Query Builder en lugar de SQL raw
+### IMAP
+- conexión por tenant
+- sincronización programada
+- gestión de mensajes no leídos
+- validación de conexión y clasificación de mensajes
 
-### Calidad de Código
-- ✅ Nombres de rutas descriptivos
-- ✅ Manejo específico de excepciones
-- ✅ Logging estructurado
-- ✅ Configuración centralizada
+### SMTP / correo
+- envío de notificaciones de negocio
+- alertas por eventos y aprobaciones
+- correos transaccionales del sistema
 
-### Laravel 13
-- ✅ Migración de Laravel 6.2 a 13.29.0
-- ✅ PHP 8.3 compatible
-- ✅ Dependencias actualizadas
-- ✅ Estructura de configuración moderna
+### Datagrid
+- lista blanca de tablas permitidas
+- acceso controlado para evitar consultas arbitrarias
+- separación por negocio y módulo
 
-## IMAP moderno
+## API y cobertura funcional
 
-La integración usa `webklex/laravel-imap` 6.x y clientes creados en runtime por tenant. La conexión se puede comprobar con `POST /api/checkIMAP` o con `php artisan imap:sync --uuid=<uuid>`. El scheduler ejecuta `imap:sync` cada cinco minutos. En producción, ejecuta el scheduler en un único worker para evitar ejecuciones simultáneas.
+El backend ya está soportando rutas para:
 
-## API Endpoints
+- login, logout, validación de token y usuario
+- compañías, organizaciones y módulos
+- usuarios, roles y permisos
+- gestión de tickets/solicitudes
+- activos y fichas técnicas
+- terceros y encuestas
+- contratos y pagos
+- archivos adjuntos y almacenamiento
+- dashboards y reportes
 
-### Autenticación (Públicos)
-- `POST /api/login` - Iniciar sesión
-- `GET /api/checkUsername/{username}` - Verificar usuario
-- `POST /api/updatePassword` - Actualizar contraseña
-- `GET /api/checkUserToken` - Verificar token
+## Validación actual
 
-### Empresa (Públicos)
-- `POST /api/checkCompany` - Verificar empresa
-- `GET /api/getPoliticasSeguridad` - Obtener políticas
-- `GET /api/getIdioma` - Obtener idioma
+La validación efectiva disponible en esta sesión incluye:
 
-### Empresa (Protegidos)
-- `GET /api/getCompanyData` - Obtener datos empresa
-- `GET /api/getCompanyModules` - Obtener módulos
+- 71 rutas API registradas
+- PHPUnit con 9 pruebas correctas y 11 aserciones
+- validación estática del editor sin errores en archivos modificados
 
-### Usuarios (Protegidos)
-- `GET /api/users` - Listar usuarios
-- `GET /api/users/{id}` - Obtener usuario
-- `POST /api/users` - Crear usuario
-- `PUT /api/users/{id}` - Actualizar usuario
-- `DELETE /api/users/{id}` - Eliminar usuario
+Sin embargo, la validación real de entorno aún requiere:
 
-## Malas Prácticas Corregidas
+- restaurar dumps MySQL reales
+- probar SMTP con entorno real
+- probar IMAP con cuenta real o simulador
+- ejecutar build/lint/test del proyecto en terminal funcional
+- pruebas end-to-end por rol y flujo de negocio
 
-### Seguridad Crítica
-- ❌ **MD5 para contraseñas** → ✅ bcrypt/Hash
-- ❌ **JWT key en código** → ✅ .env
-- ❌ **Credenciales visibles** → ✅ .env
+## Pendientes
 
-### Arquitectura
-- ❌ **Lógica en modelos** → ✅ Service Layer
-- ❌ **Controladores passthrough** → ✅ Validación y servicios
-- ❌ **SQL raw queries** → ✅ Query Builder/Eloquent
-- ❌ **ConfigHelper personalizado** → ✅ Config de Laravel
+### Infraestructura / entorno
+- validar MySQL real con schemas y tenant reales
+- validar IMAP con cuenta real
+- validar SMTP y correo transaccional
+- revisar cron/scheduler en producción
+- pruebas E2E por módulos y permisos
 
-### Calidad
-- ❌ **Sin type hints** → ✅ Tipado completo
-- ❌ **Sin validación** → ✅ Form Request Validation
-- ❌ **Rutas sin nombres** → ✅ Rutas nombradas
-- ❌ **Catch genérico** → ✅ Excepciones específicas
+### Producto
+- refinamiento UX de formularios complejos
+- dashboards analíticos avanzados
+- mejoras funcionales de catálogos y notificaciones
+
+## Resumen
+
+La base técnica y la capacidad funcional principal ya están implementadas en Laravel 13, con cobertura de negocio suficiente para sostener la migración del sistema. El trabajo restante se concentra en validación real del entorno y refinamientos de experiencia de usuario y operación.
 
 ## Licencia
 
-MIT License
+MIT
