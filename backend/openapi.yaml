@@ -1,0 +1,766 @@
+openapi: 3.0.3
+info:
+  title: Ikaros Management API
+  version: 1.0.0
+  description: |
+    Especificación OpenAPI de la API del backend Laravel para Ikaros Management 2.
+    Esta documentación refleja los endpoints actualmente definidos en la ruta principal de la API.
+servers:
+  - url: http://localhost:8000/api
+    description: Backend local de desarrollo
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Error de validación
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          nullable: true
+        message:
+          type: string
+          nullable: true
+paths:
+  /checkCompany:
+    post:
+      tags: [Auth]
+      summary: Verifica si una empresa existe o es válida.
+      security: []
+      responses:
+        '200':
+          description: Resultado de validación
+
+  /checkUsername/{username}:
+    get:
+      tags: [Auth]
+      summary: Verifica si un nombre de usuario está disponible.
+      security: []
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Estado del usuario
+
+  /login:
+    post:
+      tags: [Auth]
+      summary: Inicia sesión de usuario.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                company:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Login correcto
+
+  /checkUserToken:
+    get:
+      tags: [Auth]
+      summary: Valida si el token del usuario es vigente.
+      security: []
+      responses:
+        '200':
+          description: Token válido
+
+  /updatePassword:
+    post:
+      tags: [Auth]
+      summary: Actualiza la contraseña del usuario.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Contraseña actualizada
+
+  /emailPassword:
+    post:
+      tags: [Auth]
+      summary: Envía correo para recuperación o restablecimiento de contraseña.
+      security: []
+      responses:
+        '200':
+          description: Correo enviado
+
+  /getPoliticasSeguridad:
+    get:
+      tags: [Company]
+      summary: Obtiene políticas de seguridad.
+      security: []
+      responses:
+        '200':
+          description: Políticas
+
+  /getIdioma:
+    get:
+      tags: [Company]
+      summary: Obtiene idioma configurado del sistema.
+      security: []
+      responses:
+        '200':
+          description: Idioma
+
+  /getEncuestaTercero:
+    get:
+      tags: [ThirdParty]
+      summary: Obtiene encuesta de tercero.
+      security: []
+      responses:
+        '200':
+          description: Encuesta
+
+  /getTerceroById:
+    get:
+      tags: [ThirdParty]
+      summary: Obtiene un tercero por identificador.
+      security: []
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Tercero encontrado
+
+  /getPreguntasEncuestaTercero:
+    get:
+      tags: [ThirdParty]
+      summary: Devuelve preguntas de encuesta de tercero.
+      security: []
+      responses:
+        '200':
+          description: Preguntas
+
+  /guardarEncuestaTercero:
+    post:
+      tags: [ThirdParty]
+      summary: Guarda respuesta de encuesta de tercero.
+      security: []
+      responses:
+        '200':
+          description: Encuesta guardada
+
+  /linkEncuestaCliente:
+    post:
+      tags: [ThirdParty]
+      summary: Vincula una encuesta a un cliente.
+      security: []
+      responses:
+        '200':
+          description: Vinculación realizada
+
+  /cargarEncuesta:
+    get:
+      tags: [Requests]
+      summary: Verifica si existe encuesta para la solicitud.
+      security: []
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Resultado de verificación
+
+  /guardarEncuesta:
+    post:
+      tags: [Requests]
+      summary: Guarda la encuesta asociada a una solicitud.
+      security: []
+      responses:
+        '200':
+          description: Encuesta guardada
+
+  /getEstadoSolicitudValidacion:
+    get:
+      tags: [Requests]
+      summary: Obtiene el estado de validación de una solicitud.
+      security: []
+      responses:
+        '200':
+          description: Estado de validación
+
+  /sincronizarEmpresa:
+    post:
+      tags: [Company]
+      summary: Sincroniza información de la empresa.
+      responses:
+        '200':
+          description: Sincronización exitosa
+
+  /guardaModulos:
+    post:
+      tags: [Company]
+      summary: Guarda módulos activos para la empresa.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Módulos guardados
+
+  /crearDirectorios:
+    post:
+      tags: [Company]
+      summary: Crea directorios asociados a la empresa.
+      responses:
+        '200':
+          description: Directorios creados
+
+  /getCompanyData:
+    get:
+      tags: [Company]
+      summary: Obtiene datos de la empresa autenticada.
+      responses:
+        '200':
+          description: Datos de empresa
+
+  /getCompanyModules:
+    get:
+      tags: [Company]
+      summary: Obtiene módulos habilitados para la empresa.
+      responses:
+        '200':
+          description: Módulos
+
+  /getChatbotMenu:
+    get:
+      tags: [Company]
+      summary: Obtiene menú del chatbot asociado.
+      responses:
+        '200':
+          description: Menú
+
+  /users:
+    get:
+      tags: [Users]
+      summary: Lista usuarios.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Usuarios encontrados
+    post:
+      tags: [Users]
+      summary: Crea un usuario.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Usuario creado
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Obtiene un usuario por ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Usuario
+    put:
+      tags: [Users]
+      summary: Actualiza un usuario.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Usuario actualizado
+    delete:
+      tags: [Users]
+      summary: Elimina un usuario.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Usuario eliminado
+
+  /getSolicitudesUrgencias:
+    get:
+      tags: [Requests]
+      summary: Obtiene solicitudes urgentes.
+      responses:
+        '200':
+          description: Solicitudes urgentes
+
+  /getSolicitudesImpactos:
+    get:
+      tags: [Requests]
+      summary: Obtiene solicitudes por impacto.
+      responses:
+        '200':
+          description: Solicitudes por impacto
+
+  /getAreasServicioByModulo/{modulo}:
+    get:
+      tags: [Requests]
+      summary: Obtiene áreas de servicio por módulo.
+      parameters:
+        - in: path
+          name: modulo
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Áreas de servicio
+
+  /getCategoriasByAreaServicio/{area}:
+    get:
+      tags: [Requests]
+      summary: Obtiene categorías por área de servicio.
+      parameters:
+        - in: path
+          name: area
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Categorías
+
+  /getSubcategoriasByCategoria/{categoria}:
+    get:
+      tags: [Requests]
+      summary: Obtiene subcategorías por categoría.
+      parameters:
+        - in: path
+          name: categoria
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Subcategorías
+
+  /guardarSolicitud:
+    post:
+      tags: [Requests]
+      summary: Guarda o actualiza una solicitud.
+      responses:
+        '200':
+          description: Solicitud guardada
+
+  /verificarEstadoSolicitud:
+    get:
+      tags: [Requests]
+      summary: Verifica el estado de una solicitud.
+      responses:
+        '200':
+          description: Estado consultado
+
+  /rechazarSolucion:
+    post:
+      tags: [Requests]
+      summary: Rechaza una solución propuesta.
+      responses:
+        '200':
+          description: Resultado del rechazo
+
+  /recategorizacionIncidencia:
+    post:
+      tags: [Requests]
+      summary: Realiza recategorización de una incidencia.
+      responses:
+        '200':
+          description: Recategorización aplicada
+
+  /procesoGestion:
+    post:
+      tags: [Requests]
+      summary: Ejecuta proceso de gestión para una solicitud.
+      responses:
+        '200':
+          description: Proceso ejecutado
+
+  /asignarSolicitud:
+    post:
+      tags: [Requests]
+      summary: Asigna una solicitud a un responsable.
+      responses:
+        '200':
+          description: Asignación aplicada
+
+  /guardarValidacionIniciativa:
+    post:
+      tags: [Requests]
+      summary: Guarda validación de iniciativa asociada a la solicitud.
+      responses:
+        '200':
+          description: Validación guardada
+
+  /guardarValidacionIniciativaSeguimiento:
+    post:
+      tags: [Requests]
+      summary: Guarda seguimiento de validación de iniciativa.
+      responses:
+        '200':
+          description: Seguimiento guardado
+
+  /getConocimientos:
+    get:
+      tags: [Knowledge]
+      summary: Obtiene conocimientos.
+      responses:
+        '200':
+          description: Conocimientos
+
+  /getConocimientosByDescripcion:
+    get:
+      tags: [Knowledge]
+      summary: Busca conocimientos por descripción.
+      responses:
+        '200':
+          description: Resultados de búsqueda
+
+  /getConocimientoById/{id}:
+    get:
+      tags: [Knowledge]
+      summary: Obtiene un conocimiento por ID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Conocimiento encontrado
+
+  /guardarReputacionConocimiento:
+    post:
+      tags: [Knowledge]
+      summary: Guarda reputación o feedback de conocimiento.
+      responses:
+        '200':
+          description: Reputación guardada
+
+  /guardaPermisos:
+    post:
+      tags: [Roles]
+      summary: Guarda permisos asociados a un rol.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Permisos guardados
+
+  /roles/{idRol}/permisos:
+    get:
+      tags: [Roles]
+      summary: Obtiene permisos de un rol.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: idRol
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Permisos del rol
+
+  /obtenerConsumoAlmacenamiento:
+    get:
+      tags: [Files]
+      summary: Obtiene consumo de almacenamiento.
+      responses:
+        '200':
+          description: Consumo de almacenamiento
+
+  /uploaderFile:
+    post:
+      tags: [Files]
+      summary: Sube un archivo al sistema.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Archivo subido
+
+  /deleteFile:
+    post:
+      tags: [Files]
+      summary: Elimina un archivo del sistema.
+      responses:
+        '200':
+          description: Archivo eliminado
+
+  /files:
+    get:
+      tags: [Files]
+      summary: Lista archivos disponibles.
+      responses:
+        '200':
+          description: Archivos
+
+  /downloadFile/{uuid}/{folder}/{file}:
+    get:
+      tags: [Files]
+      summary: Descarga un archivo por UUID, carpeta y nombre.
+      parameters:
+        - in: path
+          name: uuid
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: folder
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: file
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Archivo descargado
+
+  /importExcelDatabase:
+    post:
+      tags: [Files]
+      summary: Importa datos desde archivo Excel a la base de datos.
+      responses:
+        '200':
+          description: Importación realizada
+
+  /getDataGrid:
+    post:
+      tags: [DataGrid]
+      summary: Obtiene datos para una grilla dinámica.
+      responses:
+        '200':
+          description: Datos de grid
+
+  /dataGrid:
+    post:
+      tags: [DataGrid]
+      summary: Inserta un registro en una tabla configurada.
+      responses:
+        '200':
+          description: Registro creado
+    put:
+      tags: [DataGrid]
+      summary: Actualiza un registro en una tabla configurada.
+      responses:
+        '200':
+          description: Registro actualizado
+    delete:
+      tags: [DataGrid]
+      summary: Elimina un registro en una tabla configurada.
+      responses:
+        '200':
+          description: Registro eliminado
+
+  /generarCodigoActivo:
+    post:
+      tags: [Assets]
+      summary: Genera el código para un activo.
+      responses:
+        '200':
+          description: Código generado
+
+  /generarCodigosActivos:
+    post:
+      tags: [Assets]
+      summary: Genera códigos para varios activos.
+      responses:
+        '200':
+          description: Códigos generados
+
+  /guardarCamposFicha:
+    post:
+      tags: [Assets]
+      summary: Guarda campos de ficha técnica.
+      responses:
+        '200':
+          description: Campos guardados
+
+  /camposFicha:
+    get:
+      tags: [Assets]
+      summary: Obtiene campos de ficha técnica configurados.
+      responses:
+        '200':
+          description: Campos de ficha
+
+  /valoresFicha:
+    get:
+      tags: [Assets]
+      summary: Obtiene valores de ficha técnica.
+      responses:
+        '200':
+          description: Valores de ficha
+
+  /checkSMTP:
+    post:
+      tags: [Mail]
+      summary: Verifica configuración SMTP.
+      responses:
+        '200':
+          description: Resultado del chequeo SMTP
+
+  /checkIMAP:
+    post:
+      tags: [Mail]
+      summary: Verifica la configuración IMAP del tenant.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Resultado del chequeo IMAP
+
+  /enviarMailActivacion:
+    post:
+      tags: [Mail]
+      summary: Envía correo de activación.
+      responses:
+        '200':
+          description: Correo enviado
+
+  /notificarRiesgo:
+    post:
+      tags: [Notifications]
+      summary: Notifica riesgo del sistema.
+      responses:
+        '200':
+          description: Notificación enviada
+
+  /notificarResponsableActividad:
+    post:
+      tags: [Notifications]
+      summary: Notifica responsable de actividad.
+      responses:
+        '200':
+          description: Notificación enviada
+
+  /notificarCambiosTabla:
+    post:
+      tags: [Notifications]
+      summary: Notifica cambios en una tabla.
+      responses:
+        '200':
+          description: Notificación enviada
+
+  /notificarComite:
+    post:
+      tags: [Notifications]
+      summary: Notifica comité de aprobación.
+      responses:
+        '200':
+          description: Notificación enviada
+
+  /notificarValidacionIniciativa:
+    post:
+      tags: [Notifications]
+      summary: Notifica validación de iniciativa.
+      responses:
+        '200':
+          description: Notificación enviada
+
+  /notificarAsistentesCapacitacion:
+    post:
+      tags: [Notifications]
+      summary: Notifica asistentes de capacitación.
+      responses:
+        '200':
+          description: Notificación enviada
+
+  /notificarValidacionHoras:
+    post:
+      tags: [Notifications]
+      summary: Notifica validación de horas.
+      responses:
+        '200':
+          description: Notificación enviada
+
+  /notificarConfirmacionHoras:
+    post:
+      tags: [Notifications]
+      summary: Notifica confirmación de horas.
+      responses:
+        '200':
+          description: Notificación enviada
