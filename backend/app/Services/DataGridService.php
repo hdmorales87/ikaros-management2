@@ -127,13 +127,36 @@ class DataGridService
 
     private function validateProjectSchedule(Connection $connection, string $table, array $data, int $id = 0): void
     {
-        if (!in_array($table, ['proyectos_actividades', 'proyectos_subactividades'], true)) return;
+        if (!in_array($table, ['proyectos', 'proyectos_actividades', 'proyectos_subactividades'], true)) return;
 
         $current = $id > 0 ? (array) $connection->table($table)->where('id', $id)->first() : [];
         abort_if($id > 0 && $current === [], 404, 'El registro no existe.');
         $values = array_merge($current, $data);
         if (empty($values['fecha_inicio']) || empty($values['fecha_final'])) return;
         abort_if($values['fecha_final'] < $values['fecha_inicio'], 422, 'La fecha final debe ser posterior a la fecha inicial.');
+
+        if ($table === 'proyectos') {
+            if ($id > 0) {
+                $hasOutOfRangeActivities = $connection->table('proyectos_actividades')
+                    ->where('id_proyecto', $id)
+                    ->where(function ($query) use ($values): void {
+                        $query->where('fecha_inicio', '<', $values['fecha_inicio'])
+                            ->orWhere('fecha_final', '>', $values['fecha_final']);
+                    })->exists();
+                abort_if($hasOutOfRangeActivities, 422, 'No se puede reducir el periodo: existen actividades fuera de las nuevas fechas.');
+            }
+            return;
+        }
+
+        if ($table === 'proyectos_actividades' && $id > 0) {
+            $hasOutOfRangeSubactivities = $connection->table('proyectos_subactividades')
+                ->where('id_actividad', $id)
+                ->where(function ($query) use ($values): void {
+                    $query->where('fecha_inicio', '<', $values['fecha_inicio'])
+                        ->orWhere('fecha_final', '>', $values['fecha_final']);
+                })->exists();
+            abort_if($hasOutOfRangeSubactivities, 422, 'No se puede reducir el periodo: existen subactividades fuera de las nuevas fechas.');
+        }
 
         $projectId = $table === 'proyectos_actividades'
             ? (int) ($values['id_proyecto'] ?? 0)
