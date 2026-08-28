@@ -1,0 +1,10 @@
+import { FormEvent, useEffect, useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { technicalSheetApi } from '../../api'
+
+export default function TechnicalSheetPanel({ tabla, idMaestro }: { tabla: string; idMaestro: number }) {
+  const [values, setValues] = useState<Record<string, string>>({}); const [message, setMessage] = useState(''); const fields = useQuery({ queryKey: ['technical-fields', tabla, idMaestro], queryFn: () => technicalSheetApi.fields(tabla, idMaestro) }); const save = useMutation({ mutationFn: () => technicalSheetApi.save(tabla, idMaestro, values), onSuccess: () => setMessage('Ficha técnica guardada.'), onError: () => setMessage('No fue posible guardar la ficha técnica.') })
+  useEffect(() => { if (fields.data) setValues(Object.fromEntries(fields.data.map((field) => [`campo_${field.id}`, field.valor || '']))) }, [fields.data])
+  function submit(event: FormEvent) { event.preventDefault(); save.mutate() }
+  return <div className="panel technical-sheet"><h2>Ficha técnica</h2>{fields.isLoading && <p className="muted">Cargando campos...</p>}{fields.data && <form onSubmit={submit}><div className="form-grid">{fields.data.map((field) => <label className="field" key={field.id}>{field.nombre}{field.tipo === 'date' ? <input type="date" value={values[`campo_${field.id}`] || ''} onChange={(event) => setValues({ ...values, [`campo_${field.id}`]: event.target.value })} required /> : <input maxLength={field.longitud || undefined} value={values[`campo_${field.id}`] || ''} onChange={(event) => setValues({ ...values, [`campo_${field.id}`]: event.target.value })} required />}</label>)}</div>{message && <p className="muted" role="status">{message}</p>}<button className="primary" disabled={save.isPending}>Guardar ficha</button></form>}</div>
+}

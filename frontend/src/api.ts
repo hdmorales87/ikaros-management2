@@ -93,6 +93,13 @@ export const assetApi = {
   generateCode: (idActivo: number) => api.post('/generarCodigoActivo', { idActivo }).then(({ data }) => data),
 }
 
+export type TechnicalField = { id: number; nombre: string; tipo: string; validacion?: string; longitud?: number; valor?: string | null }
+
+export const technicalSheetApi = {
+  fields: (tabla: string, idMaestro: number) => api.get<TechnicalField[]>('/camposFicha', { params: { tabla, idMaestro } }).then(({ data }) => data),
+  save: (tabla: string, idMaestro: number, arrayCampos: Record<string, string>) => api.post('/guardarCamposFicha', { tabla, idMaestro, arrayCampos }).then(({ data }) => data),
+}
+
 export const fileApi = {
   upload: (file: File, folder: string, id: number) => { const form = new FormData(); form.append('file', file); form.append('folder', folder); form.append('id', String(id)); return api.post('/uploaderFile', form, { headers: { 'Content-Type': 'multipart/form-data' } }).then(({ data }) => data) },
   list: (folder: string) => api.get<string[]>('/files', { params: { folder } }).then(({ data }) => data),
