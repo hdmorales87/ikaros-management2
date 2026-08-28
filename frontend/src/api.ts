@@ -132,6 +132,12 @@ export async function getGridRows(table: string, searchWord = '', filters: Recor
   return data
 }
 
+export async function getGridTotal(table: string, filters: Record<string, unknown> = {}): Promise<number> {
+  const payload = encodePayload({ filters, searchWord: '', showRecords: 'todos', offsetRecord: 0, date1: '', date2: '', sqlParams: {}, tabla: table, mode: 'total' })
+  const { data } = await api.post<{ total: number }[]>('/getDataGrid', { payload })
+  return Number(data[0]?.total || 0)
+}
+
 export const gridApi = {
   insert: (table: string, data: Record<string, unknown>) => api.post('/dataGrid', { payload: encodePayload({ tabla: table, arrayData: data }) }).then(({ data: response }) => response),
   update: (table: string, data: Record<string, unknown>) => api.put('/dataGrid', { payload: encodePayload({ tabla: table, arrayData: data }) }).then(({ data: response }) => response),

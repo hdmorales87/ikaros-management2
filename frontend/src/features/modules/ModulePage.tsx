@@ -6,6 +6,7 @@ import RequestBoardPage from '../requests/RequestBoardPage'
 import HoursPage from '../hours/HoursPage'
 import KnowledgePage from '../knowledge/KnowledgePage'
 import ProjectsPage from '../projects/ProjectsPage'
+import ActivitiesPage from '../projects/ActivitiesPage'
 import CompanyPage from '../companies/CompanyPage'
 import SmtpPage from '../settings/SmtpPage'
 import SecurityPolicyPage from '../settings/SecurityPolicyPage'
@@ -28,6 +29,7 @@ export default function ModulePage({ definition }: { definition: ModuleDefinitio
   if (definition.path === 'horas') return <HoursPage />
   if (definition.path === 'conocimiento') return <KnowledgePage />
   if (definition.path === 'proyectos') return <ProjectsPage />
+  if (definition.path === 'proyectos/actividades') return <ActivitiesPage />
   if (definition.path === 'config/empresa') return <CompanyPage />
   if (definition.path === 'config/smtp') return <SmtpPage />
   if (definition.path === 'config/politicas') return <SecurityPolicyPage />
