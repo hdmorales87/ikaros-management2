@@ -252,7 +252,7 @@ class SolicitudService
             ->all();
     }
 
-    public function create(array $data, string $uuid, int $userId): int
+    public function create(array $data, string $uuid, int $userId): array
     {
         $validated = Validator::make($data, [
             'modulo' => ['required', 'string', 'in:incidencias,problemas,servicios'],
@@ -276,7 +276,7 @@ class SolicitudService
             'id_categoria' => $validated['categoria'],
             'id_subcategoria' => $validated['subcategoria'],
             'asunto' => strip_tags($validated['asunto']),
-            'descripcion' => strip_tags($validated['descripcion']),
+            'descripcion' => strip_tags($validated['descripcion'], '<p><br><strong><b><em><i><ul><ol><li>'),
         ];
         if ($validated['modulo'] === 'problemas') {
             $request['problema'] = 'true';
@@ -284,7 +284,13 @@ class SolicitudService
         }
         $id = $connection->table($table)->insertGetId($request);
 
-        return (int) $id;
+        $assignment = $this->assign((int) $id, match ($validated['modulo']) {
+            'incidencias' => 'incidencia',
+            'problemas' => 'problema',
+            'servicios' => 'servicio',
+        }, $uuid);
+
+        return ['id' => (int) $id, 'assignment' => $assignment];
     }
 
     private function options(string $uuid, string $table): array

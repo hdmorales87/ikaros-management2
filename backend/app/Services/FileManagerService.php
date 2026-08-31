@@ -6,6 +6,7 @@ use App\Models\Company;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Spatie\SimpleExcel\SimpleExcelReader;
 
 class FileManagerService
@@ -30,7 +31,7 @@ class FileManagerService
     public function upload(UploadedFile $file, string $uuid, string $folder, string $recordId): string
     {
         $directory = $this->safePath($uuid.'/'.$folder);
-        $filename = basename($recordId).'.'.$file->extension();
+        $filename = basename($recordId).'_'.Str::uuid().'.'.$file->extension();
         Storage::disk('public')->putFileAs($directory, $file, $filename);
 
         return $filename;

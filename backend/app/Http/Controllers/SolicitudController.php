@@ -40,9 +40,9 @@ class SolicitudController extends Controller
     public function guardarSolicitud(Request $request): JsonResponse
     {
         $userId = (int) ($request->user()?->id ?? $this->jwtUserId($request));
-        $id = $this->solicitudService->create($request->all(), $this->uuid($request), $userId);
+        $requestData = $this->solicitudService->create($request->all(), $this->uuid($request), $userId);
 
-        return response()->json(['msg' => 'success', 'id' => $id], 201);
+        return response()->json(['msg' => 'success', ...$requestData], 201);
     }
 
     public function verificarEstadoSolicitud(Request $request): JsonResponse
