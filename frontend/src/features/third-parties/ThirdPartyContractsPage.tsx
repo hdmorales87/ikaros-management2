@@ -1,5 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft } from 'lucide-react'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { getGridRows, gridApi, GridRow } from '../../api'
 import AttachmentPanel from '../files/AttachmentPanel'
 
@@ -56,8 +58,10 @@ const emptyForm: Form = {
 }
 
 export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
+  const { id = '' } = useParams()
+  const thirdPartyId = Number(id)
   const queryClient = useQueryClient()
-  const [form, setForm] = useState<Form>(emptyForm)
+  const [form, setForm] = useState<Form>({ ...emptyForm, tercero: String(thirdPartyId || '') })
   const [selected, setSelected] = useState<GridRow | null>(null)
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [paymentForm, setPaymentForm] = useState<PaymentForm>(emptyPaymentForm)
@@ -73,8 +77,8 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
   const paymentPlans = useQuery({ queryKey: ['contract-payment-plans'], queryFn: () => getGridRows('terceros_contratos_planes_pagos', '', {}, ['nombre']) })
   const users = useQuery({ queryKey: ['contract-users'], queryFn: () => getGridRows('users', '', { activo: true }, ['nombre', 'apellido']) })
   const contracts = useQuery({
-    queryKey: ['third-party-contracts', kind],
-    queryFn: () => getGridRows('terceros_contratos', '', { tipo: kind }, ['nombre', 'objeto_contrato', 'fecha_inicio', 'fecha_vencimiento']),
+    queryKey: ['third-party-contracts', kind, thirdPartyId],
+    queryFn: () => getGridRows('terceros_contratos', '', { tipo: kind, id_tercero: thirdPartyId }, ['nombre', 'objeto_contrato', 'fecha_inicio', 'fecha_vencimiento']),
   })
   const payments = useQuery({
     queryKey: ['third-party-contract-payments', selectedContractId],
@@ -126,17 +130,17 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
       return selected ? gridApi.update('terceros_contratos', { ...payload, id: selected.id }) : gridApi.insert('terceros_contratos', payload)
     },
     onSuccess: () => {
-      setForm(emptyForm)
+      setForm({ ...emptyForm, tercero: String(thirdPartyId) })
       setSelected(null)
       setMessage('Contrato guardado.')
-      queryClient.invalidateQueries({ queryKey: ['third-party-contracts', kind] })
+      queryClient.invalidateQueries({ queryKey: ['third-party-contracts', kind, thirdPartyId] })
     },
     onError: () => setMessage('No fue posible guardar el contrato.'),
   })
 
   const deactivate = useMutation({
     mutationFn: (id: number) => gridApi.deactivate('terceros_contratos', id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['third-party-contracts', kind] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['third-party-contracts', kind, thirdPartyId] }),
   })
 
   const savePayment = useMutation({
@@ -212,8 +216,11 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
     })
   }
 
+  if (!Number.isInteger(thirdPartyId) || thirdPartyId < 1) return <Navigate to={`/${kind === 'cliente' ? 'clientes' : 'proveedores'}`} replace />
+
   return <section>
-    <div className="topbar"><div><h1>{title}</h1><p className="muted">Gestiona contratos y pagos de {kind === 'cliente' ? 'clientes' : 'proveedores'}.</p></div></div>
+    <div className="context-back"><Link to={`/${kind === 'cliente' ? 'clientes' : 'proveedores'}`}><ArrowLeft size={17} aria-hidden="true" />Volver a {kind === 'cliente' ? 'Clientes' : 'Proveedores'}</Link></div>
+    <div className="topbar"><div><h1>{title}</h1><p className="muted">Gestiona contratos y pagos de {terceroMap[String(thirdPartyId)] || (kind === 'cliente' ? 'este cliente' : 'este proveedor')}.</p></div></div>
 
     <div className="dashboard-grid">
       <article className="metric metric-blue"><span className="metric-label">Activos</span><strong>{activeContracts}</strong><span className="muted">contratos con estado definido</span></article>
@@ -224,7 +231,7 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
     <div className="panel">
       <form onSubmit={submit}>
         <div className="form-grid">
-          <label className="field">Tercero<select value={form.tercero} onChange={(event) => field('tercero', event.target.value)} required><option value="">Selecciona tercero</option>{terceros.data?.map((item) => <option value={String(item.id)} key={String(item.id)}>{String(item.razon_social ?? item.nombre_comercial ?? '-')}</option>)}</select></label>
+          <label className="field">{kind === 'cliente' ? 'Cliente' : 'Proveedor'}<input value={terceroMap[String(thirdPartyId)] || 'Cargando tercero...'} disabled /></label>
           <label className="field">Nombre del contrato<input value={form.nombre} onChange={(event) => field('nombre', event.target.value)} required /></label>
           <label className="field">Tipo de contrato<input value={form.tipoContrato} onChange={(event) => field('tipoContrato', event.target.value)} /></label>
           <label className="field">Estado<select value={form.estado} onChange={(event) => field('estado', event.target.value)}><option value="">Sin estado</option>{states.data?.map((item) => <option value={String(item.id)} key={String(item.id)}>{String(item.nombre)}</option>)}</select></label>
@@ -245,7 +252,7 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
         </div>
         {message && <p className="muted" role="status">{message}</p>}
         <button className="primary" disabled={save.isPending}>{selected ? 'Guardar cambios' : 'Crear contrato'}</button>
-        {selected && <button className="secondary" type="button" onClick={() => { setSelected(null); setForm(emptyForm) }}>Cancelar</button>}
+        {selected && <button className="secondary" type="button" onClick={() => { setSelected(null); setForm({ ...emptyForm, tercero: String(thirdPartyId) }) }}>Cancelar</button>}
       </form>
     </div>
 

@@ -19,7 +19,7 @@ api.interceptors.request.use(async (config) => {
   const token = localStorage.getItem('ikaros.token')
   const uuid = localStorage.getItem('ikaros.uuid') || import.meta.env.VITE_COMPANY_UUID || runtimeConfig.uuidIMA
   if (!import.meta.env.VITE_API_URL && runtimeConfig.apiRoute) config.baseURL = runtimeConfig.apiRoute
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  if (token && !config.headers.Authorization) config.headers.Authorization = `Bearer ${token}`
   if (uuid) config.headers['X-UUID'] = uuid
   const applicationId = import.meta.env.VITE_APPLICATION_ID || runtimeConfig.applicationID
   const applicationKey = import.meta.env.VITE_APPLICATION_KEY || runtimeConfig.applicationKEY
@@ -41,8 +41,8 @@ export type Session = {
   permisos?: string
   modulos?: string
   is_superuser?: boolean
-  userData?: { id?: number; nombre?: string; apellido?: string; email?: string; id_rol?: number }
-  companyData?: { razon_social?: string }
+  userData?: { id?: number; nombre?: string; apellido?: string; primer_nombre?: string; primer_apellido?: string; email?: string; imagen_usuario?: string; rol?: string; id_rol?: number }
+  companyData?: { razon_social?: string; uuid?: string }
 }
 
 export type User = {
@@ -69,6 +69,11 @@ export async function checkCompany(documento: string, instalation: string): Prom
   const { data } = await api.post('/checkCompany', { documento, instalation })
   if (!data?.uuid) throw new Error('Empresa no encontrada.')
   localStorage.setItem('ikaros.uuid', data.uuid)
+  return data
+}
+
+export async function checkUsername(username: string): Promise<{ name_user?: string; msg: string }> {
+  const { data } = await api.get<{ name_user?: string; msg: string }>(`/checkUsername/${encodeURIComponent(username)}`)
   return data
 }
 

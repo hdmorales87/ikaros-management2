@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Services\FileManagerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileManagerController extends Controller
 {
@@ -36,7 +36,7 @@ class FileManagerController extends Controller
         return response()->json(['msg' => 'success', 'detail' => $filename]);
     }
 
-    public function downloadFile(Request $request, string $uuid, string $folder, string $file): Response
+    public function downloadFile(Request $request, string $uuid, string $folder, string $file): StreamedResponse
     {
         abort_unless($uuid === (string) $request->header('x-uuid', ''), 403, 'Empresa no autorizada.');
         $path = $this->fileManagerService->path($uuid, $folder, $file);

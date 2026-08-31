@@ -14,6 +14,22 @@
   "uuidIMA": "",
   "applicationID": "",
   "applicationKEY": "",
-  "modulos": [],
+  "modulos": [
+    { "modulo": 1, "titulo": "Resumen", "tab": "resumen", "subtitulo": "Panel principal", "icono": "layout-dashboard", "componente": "Dashboard", "permiso": 1 },
+    { "modulo": 2, "titulo": "Incidencias", "tab": "incidencias", "subtitulo": "Gestión de incidencias", "icono": "circle-alert", "componente": "Incidencias", "permiso": 2 },
+    { "modulo": 3, "titulo": "Problemas", "tab": "problemas", "subtitulo": "Gestión de problemas", "icono": "triangle-alert", "componente": "Problemas", "permiso": 5 },
+    { "modulo": 4, "titulo": "Servicios", "tab": "servicios", "subtitulo": "Solicitudes de servicio", "icono": "concierge-bell", "componente": "Servicios", "permiso": 7 },
+    { "modulo": 5, "titulo": "Conocimiento", "tab": "conocimiento", "subtitulo": "Base de conocimiento", "icono": "book-open", "componente": "Conocimiento", "permiso": 10 },
+    { "modulo": 6, "titulo": "Activos", "tab": "activos", "subtitulo": "Inventario de activos", "icono": "package", "componente": "Activos", "permiso": 11 },
+    { "modulo": 7, "titulo": "Proveedores", "tab": "proveedores", "subtitulo": "Gestión de proveedores", "icono": "truck", "componente": "Proveedores", "permiso": 14 },
+    { "modulo": 8, "titulo": "Informes", "tab": "reportes", "subtitulo": "Reportes operativos", "icono": "chart-no-axes-column", "componente": "Reportes", "permiso": 18 },
+    { "modulo": 9, "titulo": "Administración", "tab": "administracion", "subtitulo": "Panel de control", "icono": "settings", "componente": "Administracion", "permiso": 19 },
+    { "modulo": 11, "titulo": "Calendario", "tab": "calendario", "subtitulo": "Agenda de la organización", "icono": "calendar-days", "componente": "Calendario", "permiso": 0 },
+    { "modulo": 12, "titulo": "Clientes", "tab": "clientes", "subtitulo": "Gestión de clientes", "icono": "users", "componente": "Clientes", "permiso": 62 },
+    { "modulo": 13, "titulo": "Capacitaciones", "tab": "capacitaciones", "subtitulo": "Gestión de capacitaciones", "icono": "graduation-cap", "componente": "Capacitaciones", "permiso": 72 },
+    { "modulo": 14, "titulo": "Proyectos", "tab": "proyectos", "subtitulo": "Planificación de proyectos", "icono": "folder-kanban", "componente": "Proyectos", "permiso": 88 },
+    { "modulo": 15, "titulo": "Registro de horas", "tab": "horas", "subtitulo": "Horas de proyectos", "icono": "clock-3", "componente": "Horas", "permiso": 91 },
+    { "modulo": 16, "titulo": "Iniciativas", "tab": "iniciativas", "subtitulo": "Gestión de iniciativas", "icono": "lightbulb", "componente": "Iniciativas", "permiso": 104 }
+  ],
   "control_panel": []
 }
