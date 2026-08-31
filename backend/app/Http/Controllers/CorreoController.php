@@ -24,13 +24,13 @@ class CorreoController extends Controller
             'email' => ['required', 'email'],
             'opcion' => ['required', 'string', 'in:reset,force'],
         ]);
-        return response()->json($this->mailService->passwordReset($data['email'], $data['opcion'], $this->uuid($request), (string) config('app.url')));
+        return response()->json($this->mailService->passwordReset($data['email'], $data['opcion'], $this->uuid($request), (string) config('app.frontend_url')));
     }
 
     public function enviarMailActivacion(Request $request): JsonResponse
     {
         $data = $request->validate(['idUser' => ['required', 'integer']]);
-        return response()->json($this->mailService->activation($data['idUser'], $this->uuid($request), (string) config('app.url')));
+        return response()->json($this->mailService->activation($data['idUser'], $this->uuid($request), (string) config('app.frontend_url')));
     }
 
     private function uuid(Request $request): string

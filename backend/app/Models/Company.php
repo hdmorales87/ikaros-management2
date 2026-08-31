@@ -44,7 +44,7 @@ class Company extends Model
     {
         // UUID especial para la base de datos global
         if ($uuid === 'ad2a15dcc11e41f68e6eea89a990a908') {
-            return \DB::connection('ikarosof_management_acceso');
+            return \DB::connection('global');
         }
 
         // Buscar la empresa en la base de datos global para obtener el nombre de su BD
@@ -68,6 +68,7 @@ class Company extends Model
                 'id_local',
                 'tipo_licencia',
                 'fecha_vencimiento_licencia',
+                \DB::raw('DATEDIFF(fecha_vencimiento_licencia, CURDATE()) AS dias_vencimiento'),
                 'maximo_usuarios',
                 'cuota_almacenamiento',
                 'uuid',

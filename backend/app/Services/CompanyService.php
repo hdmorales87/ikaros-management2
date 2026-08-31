@@ -77,7 +77,7 @@ class CompanyService
     {
         $company = Company::where('uuid', $uuid)->first(['id']);
         if (!$company) return [];
-        return DB::connection('ikarosof_management_acceso')->table('companies_chatbot_options as options')
+        return DB::connection('global')->table('companies_chatbot_options as options')
             ->select('master.id as opcion', 'master.descripcion', DB::raw('LOWER(modules.nombre) as modulo'), 'master.orden')
             ->join('chatbot_options_maestro as master', 'master.id', '=', 'options.id_opcion')
             ->join('companies_modulos as company_modules', function ($join): void {

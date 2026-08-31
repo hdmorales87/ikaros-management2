@@ -7,7 +7,7 @@ function PublicShell({ children }: { children: ReactNode }) { return <main class
 export function PasswordPage() {
   const { token = '', user = '', opcion = '', uuid = '' } = useParams()
   const [password, setPassword] = useState(''); const [confirmation, setConfirmation] = useState(''); const [message, setMessage] = useState('')
-  async function submit(event: FormEvent) { event.preventDefault(); if (password !== confirmation) { setMessage('Las contraseñas no coinciden.'); return } try { await publicApi.updatePassword({ email: atob(user), token, opcion: atob(opcion), password, passwordActual: password }, atob(uuid)); setMessage('Contraseña actualizada correctamente.') } catch { setMessage('No fue posible actualizar la contraseña.') } }
+  async function submit(event: FormEvent) { event.preventDefault(); if (password !== confirmation) { setMessage('Las contraseñas no coinciden.'); return } try { await publicApi.updatePassword({ email: atob(user), token, opcion: atob(opcion), password }, atob(uuid)); setMessage('Contraseña actualizada correctamente.') } catch { setMessage('No fue posible actualizar la contraseña.') } }
   return <PublicShell><h1>Activar cuenta</h1><p className="muted">Define una contraseña para continuar.</p><form onSubmit={submit}><label className="field">Nueva contraseña<input type="password" minLength={6} value={password} onChange={(event) => setPassword(event.target.value)} required /></label><label className="field">Confirmar contraseña<input type="password" minLength={6} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} required /></label>{message && <p className="muted" role="status">{message}</p>}<button className="primary">Guardar contraseña</button></form></PublicShell>
 }
 

@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom'
-import { checkCompany, login } from './api'
+import { checkCompany } from './api'
 import { AuthProvider, useAuth } from './auth'
 import { ClientSurveyPage, PasswordPage, RejectPage, SatisfactionPage } from './public-pages'
 import ForgotPasswordPage from './features/auth/ForgotPasswordPage'
@@ -12,10 +12,12 @@ import RequestDetailPage from './features/requests/RequestDetailPage'
 import RequestPage from './features/requests/RequestPage'
 import UsersPage from './features/users/UsersPage'
 import AssetDetailPage from './features/assets/AssetDetailPage'
+import AdministrationPage from './features/settings/AdministrationPage'
 import RequirePermission from './components/RequirePermission'
 
 function LoginPage() {
   const navigate = useNavigate()
+  const { login: authenticate } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [documento, setDocumento] = useState('')
@@ -30,7 +32,7 @@ function LoginPage() {
     setLoading(true)
     try {
       if (needsCompany) await checkCompany(documento, instalation)
-      await login(username, password)
+      await authenticate(username, password)
       navigate('/', { replace: true })
     } catch (cause: unknown) {
       setError(cause instanceof Error ? cause.message : 'No fue posible iniciar sesión.')
@@ -57,23 +59,28 @@ function ProtectedLayout() {
   const { logout, session } = useAuth()
   const permissions = new Set(String(session?.permisos || '').split(',').filter(Boolean).map(Number))
   const modules = new Set(String(session?.modulos || '').split(',').filter(Boolean).map(Number))
+  const isSuperUser = session?.is_superuser === true
   const definitions = moduleDefinitions.filter((definition) =>
-    (definition.permission === undefined || permissions.has(definition.permission) || permissions.has(1)) &&
+    (definition.permission === undefined || isSuperUser || permissions.has(definition.permission) || permissions.has(1)) &&
     (definition.module === undefined || modules.size === 0 || modules.has(definition.module)),
   )
-  const canManageUsers = permissions.has(1) || permissions.has(22)
+  const canManageUsers = isSuperUser || permissions.has(1) || permissions.has(22)
+  const hasAdministration = isSuperUser || modules.has(9)
+  const navigationDefinitions = definitions.filter((definition) => !definition.path.startsWith('config/'))
 
   return <div className="app-shell"><aside className="sidebar"><div className="brand">IKAROS</div><nav>
     <NavLink className="nav-link" to="/" end>Resumen</NavLink>
     {canManageUsers && <NavLink className="nav-link" to="/usuarios">Usuarios</NavLink>}
     <NavLink className="nav-link" to="/solicitudes/nueva">Nueva solicitud</NavLink>
-    {definitions.map((definition) => <NavLink className="nav-link" to={`/${definition.path}`} key={definition.path}>{definition.title}</NavLink>)}
+    {navigationDefinitions.map((definition) => <NavLink className="nav-link" to={`/${definition.path}`} key={definition.path}>{definition.title}</NavLink>)}
+    {hasAdministration && <NavLink className="nav-link nav-link-administration" to="/administracion">Administración</NavLink>}
   </nav><button className="secondary" onClick={() => { logout(); navigate('/login', { replace: true }) }}>Cerrar sesión</button></aside><main className="content"><Routes>
     <Route index element={<DashboardPage />} />
     {canManageUsers && <Route path="usuarios" element={<UsersPage />} />}
     <Route path="solicitudes/nueva" element={<RequestPage />} />
     <Route path="solicitudes/:table/:id" element={<RequestDetailPage />} />
     <Route path="activos/:id" element={<RequirePermission permission={11}><AssetDetailPage /></RequirePermission>} />
+    <Route path="administracion" element={<AdministrationPage definitions={definitions} canManageUsers={canManageUsers} />} />
     {definitions.map((definition) => <Route path={definition.path} element={<ModulePage definition={definition} />} key={definition.path} />)}
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes></main></div>

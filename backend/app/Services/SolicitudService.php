@@ -309,9 +309,9 @@ class SolicitudService
     private function moduleKey(string $module): string
     {
         return match ($module) {
-            'incidencias' => 'incidencia',
-            'problemas' => 'problema',
-            'servicios' => 'servicio',
+            'incidencias' => 'incidencias',
+            'problemas' => 'problemas',
+            'servicios' => 'servicios',
             default => throw new \InvalidArgumentException('Módulo de solicitud inválido.'),
         };
     }

@@ -29,6 +29,7 @@ class JwtAuth
                     'companyData' => $user->companyData,
                     'permisos' => $user->permisos,
                     'modulos' => $user->modulos,
+                    'is_superuser' => $user->is_superuser,
                     'iat' => $now,
                     'exp' => $now + $this->ttl,
                 ];
@@ -42,6 +43,7 @@ class JwtAuth
                         'companyData' => $user->companyData,
                         'permisos' => $user->permisos,
                         'modulos' => $user->modulos,
+                        'is_superuser' => $user->is_superuser,
                     ];
                 }
                 

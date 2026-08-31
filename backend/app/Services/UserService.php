@@ -16,8 +16,8 @@ class UserService
         $connection = (new Company())->getConnectionByUUID($uuid);
 
         return $connection->table('users')
-            ->select(['id', 'nombre', 'apellido', 'email', 'id_rol', 'activo', 'acceso_sistema'])
-            ->orderBy('nombre')
+            ->select(['id', 'primer_nombre as nombre', 'primer_apellido as apellido', 'email', 'id_rol', 'activo', 'acceso_sistema'])
+            ->orderBy('primer_nombre')
             ->get()
             ->map(fn ($user) => (array) $user)
             ->all();
@@ -27,7 +27,7 @@ class UserService
     {
         $connection = (new Company())->getConnectionByUUID($uuid);
         $user = $connection->table('users')
-            ->select(['id', 'nombre', 'segundo_nombre', 'apellido', 'segundo_apellido', 'email', 'id_rol', 'activo', 'acceso_sistema'])
+            ->select(['id', 'primer_nombre as nombre', 'segundo_nombre', 'primer_apellido as apellido', 'segundo_apellido', 'email', 'id_rol', 'activo', 'acceso_sistema'])
             ->where('id', $id)
             ->first();
 
@@ -37,6 +37,7 @@ class UserService
     public function createUser(array $data, string $uuid): array
     {
         $connection = (new Company())->getConnectionByUUID($uuid);
+        $data = $this->mapLegacyNameColumns($data);
         $data['password'] = Hash::make($data['password']);
         $data['fecha_cambio_password'] = now();
         $data['intentos_login'] = 0;
@@ -50,12 +51,28 @@ class UserService
     public function updateUser(int $id, array $data, string $uuid): ?array
     {
         $connection = (new Company())->getConnectionByUUID($uuid);
+        $data = $this->mapLegacyNameColumns($data);
         if (array_key_exists('password', $data)) {
             $data['password'] = Hash::make($data['password']);
         }
         $connection->table('users')->where('id', $id)->update($data);
 
         return $this->findUser($id, $uuid);
+    }
+
+    private function mapLegacyNameColumns(array $data): array
+    {
+        if (array_key_exists('nombre', $data)) {
+            $data['primer_nombre'] = $data['nombre'];
+            unset($data['nombre']);
+        }
+
+        if (array_key_exists('apellido', $data)) {
+            $data['primer_apellido'] = $data['apellido'];
+            unset($data['apellido']);
+        }
+
+        return $data;
     }
 
     public function deleteUser(int $id, string $uuid): bool
@@ -129,7 +146,6 @@ class UserService
                 ->join('roles as rl', 'rl.id', '=', 'u.id_rol')
                 ->where('u.activo', 1)
                 ->where('email', $username)
-                ->where('password', Hash::make($password))
                 ->first();
 
             if ($user) {
@@ -225,15 +241,6 @@ class UserService
                 ->first();
 
             if ($row) {
-                if ($request->opcion === 'reset') {
-                    if (Hash::check($request->passwordActual, $row->password)) {
-                        if (!Hash::check($request->password, $row->password)) {
-                            return $this->resetPassword($request->password, $request->email, $request->uuid);
-                        }
-                        return ['msg' => 'mismo_password'];
-                    }
-                    return ['msg' => 'no_coinciden'];
-                }
                 return $this->resetPassword($request->password, $request->email, $request->uuid);
             }
 
@@ -254,6 +261,7 @@ class UserService
                 ->select('U.intentos_login', 'PS.intentos_login AS intentos_permitidos')
                 ->leftJoin('politicas_seguridad AS PS', 'PS.activo', '=', 'U.activo')
                 ->where('u.email', $username)
+                ->first();
 
             if ($results) {
                 if ($results->intentos_permitidos > 0) {

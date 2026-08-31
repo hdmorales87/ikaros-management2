@@ -40,7 +40,8 @@ export type Session = {
   token: string
   permisos?: string
   modulos?: string
-  userData?: { id?: number; nombre?: string; apellido?: string; email?: string }
+  is_superuser?: boolean
+  userData?: { id?: number; nombre?: string; apellido?: string; email?: string; id_rol?: number }
   companyData?: { razon_social?: string }
 }
 

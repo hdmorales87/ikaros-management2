@@ -95,7 +95,7 @@ class AuthController extends Controller
             $result = $this->buildLoginResponse($userData, $companyData, $uuid);
 
             $jwtAuth = new \App\Helpers\JwtAuth();
-            $token = $jwtAuth->signup($result, $request->get('getToken', false));
+            $token = $jwtAuth->signup($result);
 
             return response()->json($token, 200);
         } catch (\Exception $e) {
@@ -140,6 +140,7 @@ class AuthController extends Controller
         $userData['dias_cambio'] = (int) $userData['dias_cambio'];
 
         $result->userData = (object) $userData;
+        $result->is_superuser = $userData['id_rol'] === 1;
 
         $role = new \App\Models\Role();
         $permisos = $role->getPermisosByRole($userData['id_rol'], $uuid);
@@ -147,8 +148,7 @@ class AuthController extends Controller
         $strPermisos = implode(',', array_column($permisos, 'id_permiso'));
         $result->permisos = $strPermisos;
 
-        $company = new \App\Models\Company();
-        $modulos = $company->getConnectionByUUID($uuid)
+        $modulos = \DB::connection('global')
             ->table('companies_modulos as m')
             ->select('id_modulo')
             ->join('companies as com', 'com.id', '=', 'm.id_empresa')
