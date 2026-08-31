@@ -10,6 +10,7 @@ const emptyForm: FormValues = { nombre: '', apellido: '', email: '', password: '
 export default function UsersPage() {
   const { session } = useAuth()
   const permissions = new Set(String(session?.permisos || '').split(',').filter(Boolean).map(Number))
+  const isSuperUser = session?.is_superuser === true
   const queryClient = useQueryClient()
   const [form, setForm] = useState<FormValues>(emptyForm)
   const [editing, setEditing] = useState<User | null>(null)
@@ -26,7 +27,7 @@ export default function UsersPage() {
   const update = useMutation({ mutationFn: ({ id, activo }: { id: number; activo: boolean }) => userApi.update(id, { activo: !activo }), onSuccess: () => { refresh(); setMessage('Estado de usuario actualizado.') } })
   const remove = useMutation({ mutationFn: userApi.remove, onSuccess: () => { refresh(); setMessage('Usuario eliminado.') } })
   const activation = useMutation({ mutationFn: userApi.sendActivation, onSuccess: () => setMessage('Enlace de activación enviado.'), onError: () => setMessage('No fue posible enviar el enlace de activación.') })
-  if (!permissions.has(1) && !permissions.has(22)) return <Navigate to="/" replace />
+  if (!isSuperUser && !permissions.has(1) && !permissions.has(22)) return <Navigate to="/" replace />
   function submit(event: FormEvent) { event.preventDefault(); save.mutate() }
   function edit(user: User) { setEditing(user); setForm({ nombre: user.nombre, apellido: user.apellido, email: user.email, password: '', id_rol: String(user.id_rol) }); setMessage('') }
   function cancel() { setEditing(null); setForm(emptyForm) }

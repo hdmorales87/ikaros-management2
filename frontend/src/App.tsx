@@ -13,6 +13,7 @@ import RequestPage from './features/requests/RequestPage'
 import UsersPage from './features/users/UsersPage'
 import AssetDetailPage from './features/assets/AssetDetailPage'
 import AdministrationPage from './features/settings/AdministrationPage'
+import AdministrationBackLink from './components/AdministrationBackLink'
 import RequirePermission from './components/RequirePermission'
 
 function LoginPage() {
@@ -70,18 +71,17 @@ function ProtectedLayout() {
 
   return <div className="app-shell"><aside className="sidebar"><div className="brand">IKAROS</div><nav>
     <NavLink className="nav-link" to="/" end>Resumen</NavLink>
-    {canManageUsers && <NavLink className="nav-link" to="/usuarios">Usuarios</NavLink>}
     <NavLink className="nav-link" to="/solicitudes/nueva">Nueva solicitud</NavLink>
     {navigationDefinitions.map((definition) => <NavLink className="nav-link" to={`/${definition.path}`} key={definition.path}>{definition.title}</NavLink>)}
     {hasAdministration && <NavLink className="nav-link nav-link-administration" to="/administracion">Administración</NavLink>}
   </nav><button className="secondary" onClick={() => { logout(); navigate('/login', { replace: true }) }}>Cerrar sesión</button></aside><main className="content"><Routes>
     <Route index element={<DashboardPage />} />
-    {canManageUsers && <Route path="usuarios" element={<UsersPage />} />}
+    {canManageUsers && <Route path="usuarios" element={<><AdministrationBackLink /><UsersPage /></>} />}
     <Route path="solicitudes/nueva" element={<RequestPage />} />
     <Route path="solicitudes/:table/:id" element={<RequestDetailPage />} />
     <Route path="activos/:id" element={<RequirePermission permission={11}><AssetDetailPage /></RequirePermission>} />
     <Route path="administracion" element={<AdministrationPage definitions={definitions} canManageUsers={canManageUsers} />} />
-    {definitions.map((definition) => <Route path={definition.path} element={<ModulePage definition={definition} />} key={definition.path} />)}
+    {definitions.map((definition) => <Route path={definition.path} element={definition.path.startsWith('config/') ? <><AdministrationBackLink /><ModulePage definition={definition} /></> : <ModulePage definition={definition} />} key={definition.path} />)}
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes></main></div>
 }

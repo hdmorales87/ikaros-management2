@@ -13,6 +13,7 @@ class ConocimientoService
         $query = $this->connection($uuid)->table('conocimiento')
             ->select(['id', 'tema'])
             ->where('activo', 1)
+            ->whereRaw("TRIM(COALESCE(solucion, '')) <> ''")
             ->orderBy('tema');
 
         if ($topic !== null && $topic !== '') {

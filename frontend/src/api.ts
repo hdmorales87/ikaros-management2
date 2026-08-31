@@ -167,6 +167,7 @@ export const publicApi = {
 }
 
 export const knowledgeApi = {
+  list: (topic = '') => api.get<{ id: number; tema: string }[]>('/getConocimientosByDescripcion', { params: { tema: topic } }).then(({ data }) => data),
   find: (id: number) => api.get<{ tema: string; solucion: string }[]>(`/getConocimientoById/${id}`).then(({ data }) => data[0]),
 }
 

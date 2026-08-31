@@ -13,6 +13,7 @@ class MailService
     {
         $this->mailer($uuid)->html($this->layout($content), function ($message) use ($email, $subject): void {
             $message->to($email)->subject($subject);
+            $this->addDebugCopy($message);
         });
         return true;
     }
@@ -23,6 +24,7 @@ class MailService
         abort_unless($emails !== [], 422, 'No hay destinatarios válidos.');
         $this->mailer($uuid)->html($this->layout($content), function ($message) use ($emails, $subject): void {
             $message->to($emails)->subject($subject);
+            $this->addDebugCopy($message);
         });
         return true;
     }
@@ -31,6 +33,7 @@ class MailService
     {
         $this->mailer($uuid)->html($this->layout('<h1>Prueba SMTP exitosa</h1><p>La configuración de correo está funcionando correctamente.</p>'), function ($message) use ($email): void {
             $message->to($email)->subject('Prueba SMTP exitosa');
+            $this->addDebugCopy($message);
         });
 
         return ['msg' => 'success'];
@@ -47,6 +50,7 @@ class MailService
         $link = rtrim($appUrl, '/').'/resetPassword/'.$token.'/'.base64_encode($email).'/'.base64_encode($option).'/'.base64_encode($uuid);
         $this->mailer($uuid)->html($this->layout('<h1>Restablecer contraseña</h1><p>Hola '.e($user->nombre).'. Usa el siguiente enlace para continuar:</p><p><a href="'.e($link).'">Cambiar contraseña</a></p>'), function ($message) use ($email): void {
             $message->to($email)->subject('Solicitud de cambio de contraseña');
+            $this->addDebugCopy($message);
         });
 
         return ['msg' => 'success'];
@@ -83,6 +87,14 @@ class MailService
         ]);
         Mail::purge('tenant_smtp');
         return Mail::mailer('tenant_smtp');
+    }
+
+    private function addDebugCopy(object $message): void
+    {
+        $debugRecipient = (string) config('mail.debug_cc', '');
+        if (filter_var($debugRecipient, FILTER_VALIDATE_EMAIL)) {
+            $message->cc($debugRecipient);
+        }
     }
 
     private function layout(string $content): string
