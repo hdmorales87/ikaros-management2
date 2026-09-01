@@ -2,7 +2,7 @@ import { FormEvent, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { getGridRows, gridApi, GridRow } from '../../api'
+import { contractApi, GridRow } from '../../api'
 import AttachmentPanel from '../files/AttachmentPanel'
 
 type Kind = 'cliente' | 'proveedor'
@@ -66,46 +66,48 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [paymentForm, setPaymentForm] = useState<PaymentForm>(emptyPaymentForm)
   const [message, setMessage] = useState('')
+  const [contractPage, setContractPage] = useState(1)
+  const [contractSearch, setContractSearch] = useState('')
 
   const title = kind === 'cliente' ? 'Contratos de clientes' : 'Contratos de proveedores'
-  const terceros = useQuery({
-    queryKey: ['third-party-contracts-terceros', kind],
-    queryFn: () => getGridRows('terceros', '', { [kind]: 'true' }, ['razon_social', 'nombre_comercial']),
+  const options = useQuery({
+    queryKey: ['v1-contract-form-options', kind, thirdPartyId],
+    queryFn: () => kind === 'cliente' ? contractApi.formOptionsForClient(thirdPartyId) : contractApi.formOptionsForProvider(thirdPartyId),
   })
-  const currencies = useQuery({ queryKey: ['contract-currencies'], queryFn: () => getGridRows('monedas', '', {}, ['nombre']) })
-  const states = useQuery({ queryKey: ['contract-states'], queryFn: () => getGridRows('terceros_contratos_estados', '', {}, ['nombre']) })
-  const paymentPlans = useQuery({ queryKey: ['contract-payment-plans'], queryFn: () => getGridRows('terceros_contratos_planes_pagos', '', {}, ['nombre']) })
-  const users = useQuery({ queryKey: ['contract-users'], queryFn: () => getGridRows('users', '', { activo: true }, ['nombre', 'apellido']) })
   const contracts = useQuery({
-    queryKey: ['third-party-contracts', kind, thirdPartyId],
-    queryFn: () => getGridRows('terceros_contratos', '', { tipo: kind, id_tercero: thirdPartyId }, ['nombre', 'objeto_contrato', 'fecha_inicio', 'fecha_vencimiento']),
+    queryKey: ['v1-third-party-contracts', kind, thirdPartyId, contractPage, contractSearch],
+    queryFn: () => kind === 'cliente'
+      ? contractApi.listForClient(thirdPartyId, { page: contractPage, per_page: 25, search: contractSearch })
+      : contractApi.listForProvider(thirdPartyId, { page: contractPage, per_page: 25, search: contractSearch }),
   })
   const payments = useQuery({
     queryKey: ['third-party-contract-payments', selectedContractId],
-    queryFn: () => selectedContractId ? getGridRows('terceros_contratos_pagos', '', { id_contrato: selectedContractId }, ['numero_factura', 'fecha_factura', 'valor']) : Promise.resolve([]),
+    queryFn: () => selectedContractId
+      ? kind === 'cliente'
+        ? contractApi.paymentsForClient(thirdPartyId, selectedContractId)
+        : contractApi.paymentsForProvider(thirdPartyId, selectedContractId)
+      : Promise.resolve([]),
     enabled: Boolean(selectedContractId),
   })
 
-  const activeContracts = useMemo(() => (contracts.data ?? []).filter((item) => String(item.estado ?? '').length > 0).length, [contracts.data])
-  const expiringSoon = useMemo(() => (contracts.data ?? []).filter((item) => {
+  const activeContracts = useMemo(() => (contracts.data?.data ?? []).filter((item) => String(item.estado ?? '').length > 0).length, [contracts.data])
+  const expiringSoon = useMemo(() => (contracts.data?.data ?? []).filter((item) => {
     const expiry = item.fecha_vencimiento ? new Date(String(item.fecha_vencimiento)) : null
     if (!expiry || Number.isNaN(expiry.getTime())) return false
     const diffDays = Math.ceil((expiry.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     return diffDays >= 0 && diffDays <= 30
   }).length, [contracts.data])
-  const overdue = useMemo(() => (contracts.data ?? []).filter((item) => {
+  const overdue = useMemo(() => (contracts.data?.data ?? []).filter((item) => {
     const expiry = item.fecha_vencimiento ? new Date(String(item.fecha_vencimiento)) : null
     if (!expiry || Number.isNaN(expiry.getTime())) return false
     return expiry.getTime() < Date.now()
   }).length, [contracts.data])
 
-  const terceroMap = useMemo(() => Object.fromEntries((terceros.data ?? []).map((item) => [String(item.id), String(item.razon_social ?? item.nombre_comercial ?? '-') ])), [terceros.data])
+  const thirdPartyName = options.data?.third_party.razon_social || options.data?.third_party.nombre_comercial || '-'
 
   const save = useMutation({
     mutationFn: () => {
       const payload = {
-        id_tercero: Number(form.tercero) || null,
-        id_area: null,
         nombre: form.nombre || null,
         tipo_contrato: form.tipoContrato || null,
         estado: form.estado ? Number(form.estado) : null,
@@ -121,39 +123,45 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
         id_responsable_pago: form.responsablePago ? Number(form.responsablePago) : null,
         nombre_responsable_pago: form.nombreResponsablePago || null,
         email_responsable_pago: form.emailResponsablePago || null,
-        tasa_negociacion: null,
         renovacion_automatica: form.renovacionAutomatica === 'true' ? 'true' : 'false',
         observaciones: form.observaciones || null,
-        tipo: kind,
-        activo: 1,
       }
-      return selected ? gridApi.update('terceros_contratos', { ...payload, id: selected.id }) : gridApi.insert('terceros_contratos', payload)
+      if (kind === 'cliente') {
+        return selected
+          ? contractApi.updateForClient(thirdPartyId, Number(selected.id), payload)
+          : contractApi.createForClient(thirdPartyId, payload)
+      }
+      return selected
+        ? contractApi.updateForProvider(thirdPartyId, Number(selected.id), payload)
+        : contractApi.createForProvider(thirdPartyId, payload)
     },
     onSuccess: () => {
       setForm({ ...emptyForm, tercero: String(thirdPartyId) })
       setSelected(null)
       setMessage('Contrato guardado.')
-      queryClient.invalidateQueries({ queryKey: ['third-party-contracts', kind, thirdPartyId] })
+      queryClient.invalidateQueries({ queryKey: ['v1-third-party-contracts', kind, thirdPartyId] })
     },
     onError: () => setMessage('No fue posible guardar el contrato.'),
   })
 
   const deactivate = useMutation({
-    mutationFn: (id: number) => gridApi.deactivate('terceros_contratos', id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['third-party-contracts', kind, thirdPartyId] }),
+    mutationFn: (id: number) => kind === 'cliente'
+      ? contractApi.deactivateForClient(thirdPartyId, id)
+      : contractApi.deactivateForProvider(thirdPartyId, id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['v1-third-party-contracts', kind, thirdPartyId] }),
   })
 
   const savePayment = useMutation({
     mutationFn: () => {
       if (!selectedContractId) throw new Error('Debe seleccionar un contrato.')
-      return gridApi.insert('terceros_contratos_pagos', {
-        id_contrato: selectedContractId,
+      const payload = {
         numero_factura: paymentForm.numeroFactura || null,
         fecha_factura: paymentForm.fechaFactura || null,
         valor: paymentForm.valor || null,
-        id_usuario: null,
-        activo: 1,
-      })
+      }
+      return kind === 'cliente'
+        ? contractApi.createPaymentForClient(thirdPartyId, selectedContractId, payload)
+        : contractApi.createPaymentForProvider(thirdPartyId, selectedContractId, payload)
     },
     onSuccess: () => {
       setPaymentForm(emptyPaymentForm)
@@ -164,7 +172,12 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
   })
 
   const deactivatePayment = useMutation({
-    mutationFn: (id: number) => gridApi.deactivate('terceros_contratos_pagos', id),
+    mutationFn: (id: number) => {
+      if (!selectedContractId) throw new Error('Debe seleccionar un contrato.')
+      return kind === 'cliente'
+        ? contractApi.deactivatePaymentForClient(thirdPartyId, selectedContractId, id)
+        : contractApi.deactivatePaymentForProvider(thirdPartyId, selectedContractId, id)
+    },
     onSuccess: () => {
       if (selectedContractId) queryClient.invalidateQueries({ queryKey: ['third-party-contract-payments', selectedContractId] })
     },
@@ -220,7 +233,7 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
 
   return <section>
     <div className="context-back"><Link to={`/${kind === 'cliente' ? 'clientes' : 'proveedores'}`}><ArrowLeft size={17} aria-hidden="true" />Volver a {kind === 'cliente' ? 'Clientes' : 'Proveedores'}</Link></div>
-    <div className="topbar"><div><h1>{title}</h1><p className="muted">Gestiona contratos y pagos de {terceroMap[String(thirdPartyId)] || (kind === 'cliente' ? 'este cliente' : 'este proveedor')}.</p></div></div>
+    <div className="topbar"><div><h1>{title}</h1><p className="muted">Gestiona contratos y pagos de {thirdPartyName === '-' ? (kind === 'cliente' ? 'este cliente' : 'este proveedor') : thirdPartyName}.</p></div><input className="search" placeholder="Buscar contrato" value={contractSearch} onChange={(event) => { setContractSearch(event.target.value); setContractPage(1) }} /></div>
 
     <div className="dashboard-grid">
       <article className="metric metric-blue"><span className="metric-label">Activos</span><strong>{activeContracts}</strong><span className="muted">contratos con estado definido</span></article>
@@ -231,20 +244,20 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
     <div className="panel">
       <form onSubmit={submit}>
         <div className="form-grid">
-          <label className="field">{kind === 'cliente' ? 'Cliente' : 'Proveedor'}<input value={terceroMap[String(thirdPartyId)] || 'Cargando tercero...'} disabled /></label>
+          <label className="field">{kind === 'cliente' ? 'Cliente' : 'Proveedor'}<input value={thirdPartyName === '-' ? 'Cargando tercero...' : thirdPartyName} disabled /></label>
           <label className="field">Nombre del contrato<input value={form.nombre} onChange={(event) => field('nombre', event.target.value)} required /></label>
           <label className="field">Tipo de contrato<input value={form.tipoContrato} onChange={(event) => field('tipoContrato', event.target.value)} /></label>
-          <label className="field">Estado<select value={form.estado} onChange={(event) => field('estado', event.target.value)}><option value="">Sin estado</option>{states.data?.map((item) => <option value={String(item.id)} key={String(item.id)}>{String(item.nombre)}</option>)}</select></label>
+          <label className="field">Estado<select value={form.estado} onChange={(event) => field('estado', event.target.value)}><option value="">Sin estado</option>{options.data?.states.map((item) => <option value={String(item.id)} key={String(item.id)}>{item.nombre}</option>)}</select></label>
           <label className="field">Objeto<textarea value={form.objeto} onChange={(event) => field('objeto', event.target.value)} /></label>
-          <label className="field">Moneda<select value={form.moneda} onChange={(event) => field('moneda', event.target.value)}><option value="">Sin moneda</option>{currencies.data?.map((item) => <option value={String(item.id)} key={String(item.id)}>{String(item.nombre)}</option>)}</select></label>
+          <label className="field">Moneda<select value={form.moneda} onChange={(event) => field('moneda', event.target.value)}><option value="">Sin moneda</option>{options.data?.currencies.map((item) => <option value={String(item.id)} key={String(item.id)}>{item.nombre}</option>)}</select></label>
           <label className="field">Monto<input type="number" value={form.monto} onChange={(event) => field('monto', event.target.value)} /></label>
           <label className="field">IVA<input type="number" value={form.iva} onChange={(event) => field('iva', event.target.value)} /></label>
-          <label className="field">Responsable<select value={form.responsable} onChange={(event) => field('responsable', event.target.value)}><option value="">Sin responsable</option>{users.data?.map((item) => <option value={String(item.id)} key={String(item.id)}>{String(item.nombre)} {String(item.apellido)}</option>)}</select></label>
+          <label className="field">Responsable<select value={form.responsable} onChange={(event) => field('responsable', event.target.value)}><option value="">Sin responsable</option>{options.data?.users.map((item) => <option value={String(item.id)} key={String(item.id)}>{item.nombre} {item.apellido || ''}</option>)}</select></label>
           <label className="field">Inicio<input type="date" value={form.fechaInicio} onChange={(event) => field('fechaInicio', event.target.value)} /></label>
           <label className="field">Vencimiento<input type="date" value={form.fechaVencimiento} onChange={(event) => field('fechaVencimiento', event.target.value)} /></label>
-          <label className="field">Plan de pago<select value={form.planPago} onChange={(event) => field('planPago', event.target.value)}><option value="">Sin plan</option>{paymentPlans.data?.map((item) => <option value={String(item.id)} key={String(item.id)}>{String(item.nombre)}</option>)}</select></label>
+          <label className="field">Plan de pago<select value={form.planPago} onChange={(event) => field('planPago', event.target.value)}><option value="">Sin plan</option>{options.data?.payment_plans.map((item) => <option value={String(item.id)} key={String(item.id)}>{item.nombre}</option>)}</select></label>
           <label className="field">Número de pagos<input type="number" value={form.numeroPagos} onChange={(event) => field('numeroPagos', event.target.value)} /></label>
-          <label className="field">Responsable de pago<select value={form.responsablePago} onChange={(event) => field('responsablePago', event.target.value)}><option value="">Sin responsable</option>{users.data?.map((item) => <option value={String(item.id)} key={String(item.id)}>{String(item.nombre)} {String(item.apellido)}</option>)}</select></label>
+          <label className="field">Responsable de pago<select value={form.responsablePago} onChange={(event) => field('responsablePago', event.target.value)}><option value="">Sin responsable</option>{options.data?.users.map((item) => <option value={String(item.id)} key={String(item.id)}>{item.nombre} {item.apellido || ''}</option>)}</select></label>
           <label className="field">Nombre responsable<input value={form.nombreResponsablePago} onChange={(event) => field('nombreResponsablePago', event.target.value)} /></label>
           <label className="field">Email responsable<input type="email" value={form.emailResponsablePago} onChange={(event) => field('emailResponsablePago', event.target.value)} /></label>
           <label className="field">Renovación automática<select value={form.renovacionAutomatica} onChange={(event) => field('renovacionAutomatica', event.target.value)}><option value="false">No</option><option value="true">Sí</option></select></label>
@@ -263,8 +276,8 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
             <tr><th>Tercero</th><th>Nombre</th><th>Inicio</th><th>Vencimiento</th><th>Acciones</th></tr>
           </thead>
           <tbody>
-            {contracts.data?.map((item, index) => <tr key={String(item.id ?? index)}>
-              <td>{String(terceroMap[String(item.id_tercero)] ?? '-')}</td>
+            {contracts.data?.data.map((item, index) => <tr key={String(item.id ?? index)}>
+              <td>{thirdPartyName}</td>
               <td>{String(item.nombre ?? '-')}</td>
               <td>{String(item.fecha_inicio ?? '-')}</td>
               <td>{String(item.fecha_vencimiento ?? '-')}</td>
@@ -277,6 +290,7 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
           </tbody>
         </table>
       </div>
+      {contracts.data && <div className="table-pagination"><span>{contracts.data.meta.total} contratos</span><div><button className="secondary" type="button" onClick={() => setContractPage((current) => current - 1)} disabled={contractPage === 1}>Anterior</button><span>Página {contracts.data.meta.current_page} de {contracts.data.meta.last_page}</span><button className="secondary" type="button" onClick={() => setContractPage((current) => current + 1)} disabled={contractPage === contracts.data.meta.last_page}>Siguiente</button></div></div>}
     </div>
 
     {selectedContractId && (

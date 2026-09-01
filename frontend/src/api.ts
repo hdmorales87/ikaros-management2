@@ -125,6 +125,9 @@ export const fileApi = {
 export type RequestCatalog = { id: number; nombre: string }
 export type Incident = { id: number; asunto: string; estado: number; prioridad: number | null }
 export type ThirdParty = { id: number; documento: string | null; razon_social: string | null; nombre_comercial: string | null; email: string | null; puntaje_cliente?: number | null; puntaje_proveedor?: number | null }
+export type ContractFormOption = { id: number; nombre: string; apellido?: string | null }
+export type ContractFormOptions = { third_party: { id: number; razon_social: string | null; nombre_comercial: string | null }; currencies: ContractFormOption[]; states: ContractFormOption[]; payment_plans: ContractFormOption[]; users: ContractFormOption[] }
+export type Project = { id: number; codigo: string | null; nombre: string; estado: number | null; fecha_inicio: string | null; fecha_final: string | null }
 export type RequestDetail = Record<string, unknown> & { id: number; asunto?: string; descripcion?: string; estado?: number; prioridad?: number | null }
 export type RequestFollowup = { id: number; estado: string; observacion: string; id_usuario: number; fecha: string }
 
@@ -224,6 +227,34 @@ export const notificationApi = {
 export const thirdPartyApi = {
   listClients: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<ThirdParty>>('/v1/clients', { params }).then(({ data }) => data),
   listProviders: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<ThirdParty>>('/v1/providers', { params }).then(({ data }) => data),
+}
+
+export const contractApi = {
+  formOptionsForClient: (id: number) => api.get<ContractFormOptions>(`/v1/clients/${id}/contract-form-options`).then(({ data }) => data),
+  formOptionsForProvider: (id: number) => api.get<ContractFormOptions>(`/v1/providers/${id}/contract-form-options`).then(({ data }) => data),
+  listForClient: (id: number, params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<GridRow>>(`/v1/clients/${id}/contracts`, { params }).then(({ data }) => data),
+  listForProvider: (id: number, params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<GridRow>>(`/v1/providers/${id}/contracts`, { params }).then(({ data }) => data),
+  createForClient: (id: number, payload: Record<string, unknown>) => api.post<GridRow>(`/v1/clients/${id}/contracts`, payload).then(({ data }) => data),
+  createForProvider: (id: number, payload: Record<string, unknown>) => api.post<GridRow>(`/v1/providers/${id}/contracts`, payload).then(({ data }) => data),
+  updateForClient: (clientId: number, contractId: number, payload: Record<string, unknown>) => api.put<GridRow>(`/v1/clients/${clientId}/contracts/${contractId}`, payload).then(({ data }) => data),
+  updateForProvider: (providerId: number, contractId: number, payload: Record<string, unknown>) => api.put<GridRow>(`/v1/providers/${providerId}/contracts/${contractId}`, payload).then(({ data }) => data),
+  deactivateForClient: (clientId: number, contractId: number) => api.delete(`/v1/clients/${clientId}/contracts/${contractId}`).then(({ data }) => data),
+  deactivateForProvider: (providerId: number, contractId: number) => api.delete(`/v1/providers/${providerId}/contracts/${contractId}`).then(({ data }) => data),
+  paymentsForClient: (clientId: number, contractId: number) => api.get<GridRow[]>(`/v1/clients/${clientId}/contracts/${contractId}/payments`).then(({ data }) => data),
+  paymentsForProvider: (providerId: number, contractId: number) => api.get<GridRow[]>(`/v1/providers/${providerId}/contracts/${contractId}/payments`).then(({ data }) => data),
+  createPaymentForClient: (clientId: number, contractId: number, payload: Record<string, unknown>) => api.post<GridRow>(`/v1/clients/${clientId}/contracts/${contractId}/payments`, payload).then(({ data }) => data),
+  createPaymentForProvider: (providerId: number, contractId: number, payload: Record<string, unknown>) => api.post<GridRow>(`/v1/providers/${providerId}/contracts/${contractId}/payments`, payload).then(({ data }) => data),
+  deactivatePaymentForClient: (clientId: number, contractId: number, paymentId: number) => api.delete(`/v1/clients/${clientId}/contracts/${contractId}/payments/${paymentId}`).then(({ data }) => data),
+  deactivatePaymentForProvider: (providerId: number, contractId: number, paymentId: number) => api.delete(`/v1/providers/${providerId}/contracts/${contractId}/payments/${paymentId}`).then(({ data }) => data),
+}
+
+export const projectApi = {
+  list: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<Project>>('/v1/projects', { params }).then(({ data }) => data),
+  update: (id: number, payload: Pick<Project, 'nombre' | 'fecha_inicio' | 'fecha_final'>) => api.put<Project>(`/v1/projects/${id}`, payload).then(({ data }) => data),
+  activities: (id: number) => api.get<GridRow[]>(`/v1/projects/${id}/activities`).then(({ data }) => data),
+  createActivity: (projectId: number, payload: { nombre: string; descripcion: string; fecha_inicio: string; hora_inicio: string; fecha_final: string; hora_final: string }) => api.post(`/v1/projects/${projectId}/activities`, payload).then(({ data }) => data),
+  risks: (id: number) => api.get<GridRow[]>(`/v1/projects/${id}/risks`).then(({ data }) => data),
+  createRisk: (projectId: number, nombre: string) => api.post(`/v1/projects/${projectId}/risks`, { nombre }).then(({ data }) => data),
 }
 
 export const initiativeApi = {
