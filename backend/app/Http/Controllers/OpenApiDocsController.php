@@ -33,9 +33,8 @@ class OpenApiDocsController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"documento", "instalation"},
-     *             @OA\Property(property="documento", type="string", example="900123456"),
-     *             @OA\Property(property="instalation", type="string", example="servicedesk0")
+     *             required={"documento"},
+     *             @OA\Property(property="documento", type="string", example="900123456")
      *         )
      *     ),
      *     @OA\Response(response=200, description="Empresa válida"),

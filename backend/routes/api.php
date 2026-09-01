@@ -67,6 +67,14 @@ Route::middleware(['security.headers', 'authenticate.jwt'])->group(function () {
     Route::get('/files', [App\Http\Controllers\FileManagerController::class, 'listFiles']);
     Route::get('/downloadFile/{uuid}/{folder}/{file}', [App\Http\Controllers\FileManagerController::class, 'downloadFile']);
     Route::post('/importExcelDatabase', [App\Http\Controllers\FileManagerController::class, 'importExcelDatabase']);
+    Route::prefix('v1')->group(function () {
+        Route::get('/assets', [App\Http\Controllers\Api\V1\ActivoController::class, 'index'])->middleware('permission:11');
+        Route::get('/assets/{asset}', [App\Http\Controllers\Api\V1\ActivoController::class, 'show'])->middleware('permission:11');
+        Route::put('/assets/{asset}', [App\Http\Controllers\Api\V1\ActivoController::class, 'update'])->middleware('permission:11');
+        Route::get('/incidents', [App\Http\Controllers\SolicitudController::class, 'indexIncidents'])->middleware('permission:2');
+        Route::get('/problems', [App\Http\Controllers\SolicitudController::class, 'indexProblems'])->middleware('permission:5');
+        Route::get('/services', [App\Http\Controllers\SolicitudController::class, 'indexServices'])->middleware('permission:7');
+    });
     Route::post('/getDataGrid', [App\Http\Controllers\DataGridController::class, 'getData']);
     Route::post('/dataGrid', [App\Http\Controllers\DataGridController::class, 'insertData']);
     Route::put('/dataGrid', [App\Http\Controllers\DataGridController::class, 'updateData']);

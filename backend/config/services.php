@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'ikaros_cloud' => [
+        'url' => env('CLOUD_API_URL'),
+        'application_id' => env('CLOUD_APPLICATION_ID'),
+        'application_key' => env('CLOUD_APPLICATION_KEY'),
+    ],
+
 ];

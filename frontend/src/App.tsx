@@ -26,7 +26,6 @@ function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [documento, setDocumento] = useState('')
-  const [instalation, setInstalation] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [companyName, setCompanyName] = useState('')
@@ -39,7 +38,7 @@ function LoginPage() {
   const needsCompany = !hasSelectedCompany
 
   useEffect(() => {
-    if (!needsCompany || !documento.trim() || !instalation.trim()) {
+    if (!needsCompany || !documento.trim()) {
       setCompanyName('')
       setCompanyLookupError('')
       setCheckingCompany(false)
@@ -48,14 +47,14 @@ function LoginPage() {
 
     setCheckingCompany(true)
     const timeoutId = window.setTimeout(() => {
-      checkCompany(documento.trim(), instalation.trim())
+      checkCompany(documento.trim())
         .then((company) => { setCompanyName(company.razon_social); setCompanyLookupError('') })
         .catch(() => { setCompanyName(''); setCompanyLookupError('No encontramos una empresa activa con estos datos.') })
         .finally(() => setCheckingCompany(false))
     }, 500)
 
     return () => window.clearTimeout(timeoutId)
-  }, [documento, instalation, needsCompany])
+  }, [documento, needsCompany])
 
   useEffect(() => {
     const email = username.trim()
@@ -81,7 +80,7 @@ function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      if (needsCompany) await checkCompany(documento, instalation)
+      if (needsCompany) await checkCompany(documento)
       await authenticate(username, password)
       navigate('/', { replace: true })
     } catch (cause: unknown) {
@@ -94,7 +93,6 @@ function LoginPage() {
   function changeCompany() {
     localStorage.removeItem('ikaros.uuid')
     setDocumento('')
-    setInstalation('')
     setCompanyName('')
     setCompanyLookupError('')
     setUserName('')
@@ -106,7 +104,7 @@ function LoginPage() {
     <div className="brand">IKAROS / MANAGEMENT</div>
     <h1>Acceso al sistema</h1>
     <p className="muted">Gestiona la operación de tu organización.</p>
-    {needsCompany && <><label className="field">Documento de empresa<input value={documento} onChange={(event) => setDocumento(event.target.value)} required /></label><label className="field">Instalación<input value={instalation} onChange={(event) => setInstalation(event.target.value)} required /></label>{checkingCompany && <p className="field-feedback field-feedback-pending"><LoaderCircle size={16} aria-hidden="true" />Verificando empresa...</p>}{companyName && <p className="field-feedback field-feedback-success"><CheckCircle2 size={17} aria-hidden="true" />{companyName}</p>}{companyLookupError && <p className="field-feedback field-feedback-error"><CircleAlert size={17} aria-hidden="true" />{companyLookupError}</p>}</>}
+    {needsCompany && <><label className="field">Documento de empresa<input value={documento} onChange={(event) => setDocumento(event.target.value)} required /></label>{checkingCompany && <p className="field-feedback field-feedback-pending"><LoaderCircle size={16} aria-hidden="true" />Verificando empresa...</p>}{companyName && <p className="field-feedback field-feedback-success"><CheckCircle2 size={17} aria-hidden="true" />{companyName}</p>}{companyLookupError && <p className="field-feedback field-feedback-error"><CircleAlert size={17} aria-hidden="true" />{companyLookupError}</p>}</>}
     {!needsCompany && !usesConfiguredCompany && <button className="change-company" type="button" onClick={changeCompany}><ArrowLeft size={16} aria-hidden="true" />Cambiar empresa</button>}
     <label className="field">Correo electrónico<input type="email" value={username} onChange={(event) => setUsername(event.target.value)} required autoComplete="username" /></label>{checkingUser && <p className="field-feedback field-feedback-pending"><LoaderCircle size={16} aria-hidden="true" />Buscando usuario...</p>}{userName && <p className="field-feedback field-feedback-success"><CheckCircle2 size={17} aria-hidden="true" />Hola, {userName}</p>}
     <label className="field">Contraseña<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required autoComplete="current-password" /></label>

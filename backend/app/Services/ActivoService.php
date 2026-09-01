@@ -7,6 +7,63 @@ use Illuminate\Database\Connection;
 
 class ActivoService
 {
+    private const DETAIL_COLUMNS = [
+        'id', 'nombre', 'codigo', 'marca', 'id_tipo', 'id_departamento',
+        'id_proveedor', 'estado', 'id_asignado', 'precio_compra',
+        'fecha_compra', 'numero_factura', 'id_ubicacion', 'activo',
+    ];
+
+    public function paginate(string $uuid, string $search, int $perPage, string $sort): array
+    {
+        $connection = $this->connection($uuid);
+        $query = $connection->table('activos')
+            ->select(['id', 'codigo', 'nombre', 'marca', 'activo'])
+            ->where('activo', 1);
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search): void {
+                $builder->where('codigo', 'like', '%'.$search.'%')
+                    ->orWhere('nombre', 'like', '%'.$search.'%')
+                    ->orWhere('marca', 'like', '%'.$search.'%');
+            });
+        }
+
+        $this->applySort($query, $sort);
+        $paginator = $query->paginate($perPage);
+
+        return [
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+            ],
+        ];
+    }
+
+    public function find(int $assetId, string $uuid): ?array
+    {
+        $asset = $this->connection($uuid)->table('activos')
+            ->select(self::DETAIL_COLUMNS)
+            ->where('id', $assetId)
+            ->where('activo', 1)
+            ->first();
+
+        return $asset ? (array) $asset : null;
+    }
+
+    public function update(int $assetId, array $data, string $uuid): ?array
+    {
+        $connection = $this->connection($uuid);
+        $updated = $connection->table('activos')
+            ->where('id', $assetId)
+            ->where('activo', 1)
+            ->update($data);
+
+        return $updated > 0 || $this->find($assetId, $uuid) ? $this->find($assetId, $uuid) : null;
+    }
+
     public function generateCode(int $assetId, string $uuid): array
     {
         $connection = $this->connection($uuid);
@@ -43,6 +100,23 @@ class ActivoService
         $previous = $connection->table('activos')->whereNotNull('codigo')->where('id_tipo', $typeId)->where('id', '<', $assetId)->orderByDesc('id')->value('codigo');
         $number = $previous ? ((int) substr((string) $previous, 2) + 1) : 1;
         return str_pad((string) $typeId, 2, '0', STR_PAD_LEFT).str_pad((string) $number, 6, '0', STR_PAD_LEFT);
+    }
+
+    private function applySort($query, string $sort): void
+    {
+        $allowed = ['id', 'codigo', 'nombre', 'marca'];
+        $applied = false;
+
+        foreach (array_filter(explode(',', $sort)) as $requested) {
+            $column = ltrim($requested, '-');
+            abort_unless(in_array($column, $allowed, true), 422, 'Campo de ordenamiento no permitido.');
+            $query->orderBy($column, str_starts_with($requested, '-') ? 'desc' : 'asc');
+            $applied = true;
+        }
+
+        if (!$applied) {
+            $query->orderByDesc('id');
+        }
     }
 
     private function connection(string $uuid): Connection

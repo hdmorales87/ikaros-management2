@@ -65,8 +65,8 @@ export async function login(username: string, password: string): Promise<Session
   return data
 }
 
-export async function checkCompany(documento: string, instalation: string): Promise<{ uuid: string; razon_social: string }> {
-  const { data } = await api.post('/checkCompany', { documento, instalation })
+export async function checkCompany(documento: string): Promise<{ uuid: string; razon_social: string }> {
+  const { data } = await api.post('/checkCompany', { documento })
   if (!data?.uuid) throw new Error('Empresa no encontrada.')
   localStorage.setItem('ikaros.uuid', data.uuid)
   return data
@@ -95,7 +95,13 @@ export const roleApi = {
   savePermissions: (idRol: number, arrayPermisos: number[]) => api.post('/guardaPermisos', { idRol, arrayPermisos }).then(({ data }) => data),
 }
 
+export type Asset = { id: number; codigo: string | null; nombre: string; marca: string | null; activo: number; id_tipo?: number | null; id_departamento?: number | null; id_proveedor?: number | null; estado?: number | null; id_asignado?: number | null; precio_compra?: number | null; fecha_compra?: string | null; numero_factura?: string | null; id_ubicacion?: number | null }
+export type PaginatedResponse<T> = { data: T[]; meta: { current_page: number; per_page: number; total: number; last_page: number } }
+
 export const assetApi = {
+  list: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<Asset>>('/v1/assets', { params }).then(({ data }) => data),
+  find: (id: number) => api.get<Asset>(`/v1/assets/${id}`).then(({ data }) => data),
+  update: (id: number, payload: Partial<Asset>) => api.put<Asset>(`/v1/assets/${id}`, payload).then(({ data }) => data),
   generateCode: (idActivo: number) => api.post('/generarCodigoActivo', { idActivo }).then(({ data }) => data),
 }
 
@@ -114,8 +120,12 @@ export const fileApi = {
 }
 
 export type RequestCatalog = { id: number; nombre: string }
+export type Incident = { id: number; asunto: string; estado: number; prioridad: number | null }
 
 export const requestApi = {
+  listIncidents: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<Incident>>('/v1/incidents', { params }).then(({ data }) => data),
+  listProblems: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<Incident>>('/v1/problems', { params }).then(({ data }) => data),
+  listServices: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<Incident>>('/v1/services', { params }).then(({ data }) => data),
   urgencies: () => api.get<RequestCatalog[]>('/getSolicitudesUrgencias').then(({ data }) => data),
   impacts: () => api.get<RequestCatalog[]>('/getSolicitudesImpactos').then(({ data }) => data),
   areas: (module: string) => api.get<RequestCatalog[]>(`/getAreasServicioByModulo/${module}`).then(({ data }) => data),

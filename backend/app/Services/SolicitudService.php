@@ -20,6 +20,61 @@ class SolicitudService
         'servicios' => 'servicios',
     ];
 
+    public function paginateIncidents(string $uuid, string $search, int $perPage, string $sort): array
+    {
+        return $this->paginateRequests($uuid, 'incidencia', $search, $perPage, $sort);
+    }
+
+    public function paginateProblems(string $uuid, string $search, int $perPage, string $sort): array
+    {
+        return $this->paginateRequests($uuid, 'problema', $search, $perPage, $sort);
+    }
+
+    public function paginateServices(string $uuid, string $search, int $perPage, string $sort): array
+    {
+        return $this->paginateRequests($uuid, 'servicio', $search, $perPage, $sort);
+    }
+
+    private function paginateRequests(string $uuid, string $type, string $search, int $perPage, string $sort): array
+    {
+        $table = match ($type) {
+            'incidencia', 'problema' => 'incidencias',
+            'servicio' => 'servicios',
+        };
+        $query = $this->connection($uuid)->table($table)
+            ->select(['id', 'asunto', 'estado', 'prioridad'])
+            ->where('activo', 1);
+
+        if ($type === 'incidencia') {
+            $query->where(function ($builder): void {
+                $builder->whereNull('problema')->orWhere('problema', '!=', 'true');
+            });
+        }
+        if ($type === 'problema') {
+            $query->where('problema', 'true');
+        }
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search): void {
+                $builder->where('asunto', 'like', '%'.$search.'%')
+                    ->orWhere('descripcion', 'like', '%'.$search.'%');
+            });
+        }
+
+        $this->applyIncidentSort($query, $sort);
+        $paginator = $query->paginate($perPage);
+
+        return [
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+            ],
+        ];
+    }
+
     public function reject(string $table, int $id, string $observation, int $userId, string $uuid): void
     {
         abort_unless(isset(self::MODULE_TABLES[$table]), 422, 'Tabla de solicitud inválida.');
@@ -301,6 +356,23 @@ class SolicitudService
             ->get()
             ->map(fn ($item) => (array) $item)
             ->all();
+    }
+
+    private function applyIncidentSort($query, string $sort): void
+    {
+        $allowed = ['id', 'asunto', 'estado', 'prioridad'];
+        $applied = false;
+
+        foreach (array_filter(explode(',', $sort)) as $requested) {
+            $column = ltrim($requested, '-');
+            abort_unless(in_array($column, $allowed, true), 422, 'Campo de ordenamiento no permitido.');
+            $query->orderBy($column, str_starts_with($requested, '-') ? 'desc' : 'asc');
+            $applied = true;
+        }
+
+        if (!$applied) {
+            $query->orderByDesc('id');
+        }
     }
 
     private function connection(string $uuid): Connection

@@ -31,7 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   function logout() {
     clearSession()
-    localStorage.removeItem('ikaros.uuid')
     setSession(null)
   }
 

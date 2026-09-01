@@ -17,6 +17,44 @@ class SolicitudController extends Controller
         return response()->json($this->solicitudService->urgencyOptions($this->uuid($request)));
     }
 
+    public function indexIncidents(Request $request): JsonResponse
+    {
+        return $this->paginatedRequests($request, 'incidencia');
+    }
+
+    public function indexProblems(Request $request): JsonResponse
+    {
+        return $this->paginatedRequests($request, 'problema');
+    }
+
+    public function indexServices(Request $request): JsonResponse
+    {
+        return $this->paginatedRequests($request, 'servicio');
+    }
+
+    private function paginatedRequests(Request $request, string $type): JsonResponse
+    {
+        $query = $request->validate([
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'search' => ['nullable', 'string', 'max:100'],
+            'sort' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $method = match ($type) {
+            'incidencia' => 'paginateIncidents',
+            'problema' => 'paginateProblems',
+            'servicio' => 'paginateServices',
+        };
+
+        return response()->json($this->solicitudService->{$method}(
+            $this->uuid($request),
+            trim((string) ($query['search'] ?? '')),
+            (int) ($query['per_page'] ?? 25),
+            (string) ($query['sort'] ?? ''),
+        ));
+    }
+
     public function getSolicitudesImpactos(Request $request): JsonResponse
     {
         return response()->json($this->solicitudService->impactOptions($this->uuid($request)));

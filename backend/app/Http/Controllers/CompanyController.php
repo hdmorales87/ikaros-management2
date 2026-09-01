@@ -55,7 +55,6 @@ class CompanyController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'documento' => 'required|string',
-            'instalation' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -66,11 +65,7 @@ class CompanyController extends Controller
         }
 
         try {
-            $company = Company::where('documento', $request->documento)
-                ->where('bd_ubicacion', $request->instalation)
-                ->where('activo', 1)
-                ->select('uuid', 'razon_social')
-                ->first();
+            $company = $this->companyService->checkCompany($request->documento);
 
             return response()->json($company);
         } catch (\Exception $e) {

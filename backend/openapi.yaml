@@ -42,6 +42,157 @@ components:
           type: string
           nullable: true
 paths:
+  /v1/assets:
+    get:
+      tags: [Assets]
+      summary: Lista los activos activos de la empresa autenticada.
+      description: Permite búsqueda, paginación y ordenamiento únicamente por campos documentados.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - in: query
+          name: search
+          schema:
+            type: string
+            maxLength: 100
+        - in: query
+          name: sort
+          description: Lista separada por comas. El prefijo `-` indica orden descendente.
+          schema:
+            type: string
+            example: codigo,-nombre
+      responses:
+        '200':
+          description: Página de activos.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer, example: 42 }
+                        codigo: { type: string, nullable: true, example: '01000042' }
+                        nombre: { type: string, example: Portátil de operaciones }
+                        marca: { type: string, nullable: true, example: Dell }
+                        activo: { type: integer, example: 1 }
+                  meta:
+                    type: object
+                    properties:
+                      current_page: { type: integer, example: 1 }
+                      per_page: { type: integer, example: 25 }
+                      total: { type: integer, example: 184 }
+                      last_page: { type: integer, example: 8 }
+        '403':
+          description: El usuario no tiene permiso para consultar activos.
+        '422':
+          description: Parámetros de consulta inválidos o campo de ordenamiento no permitido.
+
+  /v1/assets/{asset}:
+    parameters:
+      - in: path
+        name: asset
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+    get:
+      tags: [Assets]
+      summary: Obtiene un activo activo de la empresa autenticada.
+      responses:
+        '200':
+          description: Activo encontrado.
+        '404':
+          description: Activo no encontrado.
+    put:
+      tags: [Assets]
+      summary: Actualiza los campos permitidos de un activo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre: { type: string, maxLength: 255 }
+                codigo: { type: string, nullable: true, maxLength: 100 }
+                marca: { type: string, nullable: true, maxLength: 100 }
+                id_tipo: { type: integer, nullable: true }
+                id_departamento: { type: integer, nullable: true }
+                id_proveedor: { type: integer }
+                estado: { type: integer, nullable: true }
+                id_asignado: { type: integer, nullable: true }
+                precio_compra: { type: number, nullable: true, minimum: 0 }
+                fecha_compra: { type: string, format: date, nullable: true }
+                numero_factura: { type: string, nullable: true, maxLength: 100 }
+                id_ubicacion: { type: integer, nullable: true }
+      responses:
+        '200':
+          description: Activo actualizado.
+        '404':
+          description: Activo no encontrado.
+        '422':
+          description: Datos inválidos.
+
+  /v1/incidents:
+    get:
+      tags: [Incidents]
+      summary: Lista incidencias activas que no han sido clasificadas como problema.
+      description: Requiere el permiso de Incidencias. La búsqueda consulta asunto y descripción; el orden sólo admite id, asunto, estado y prioridad.
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - in: query
+          name: search
+          schema: { type: string, maxLength: 100 }
+        - in: query
+          name: sort
+          schema: { type: string, example: -prioridad,asunto }
+      responses:
+        '200':
+          description: Página de incidencias.
+        '403':
+          description: El usuario no tiene permiso para consultar incidencias.
+        '422':
+          description: Parámetros de consulta inválidos o campo de ordenamiento no permitido.
+
+  /v1/problems:
+    get:
+      tags: [Problems]
+      summary: Lista los problemas activos de la empresa autenticada.
+      description: Requiere el permiso de Problemas. Admite los mismos parámetros de paginación, búsqueda y orden documentados para Incidencias.
+      responses:
+        '200': { description: Página de problemas. }
+        '403': { description: El usuario no tiene permiso para consultar problemas. }
+
+  /v1/services:
+    get:
+      tags: [Services]
+      summary: Lista las solicitudes de servicio activas de la empresa autenticada.
+      description: Requiere el permiso de Servicios. Admite los mismos parámetros de paginación, búsqueda y orden documentados para Incidencias.
+      responses:
+        '200': { description: Página de solicitudes de servicio. }
+        '403': { description: El usuario no tiene permiso para consultar servicios. }
+
   /checkCompany:
     post:
       tags: [Auth]

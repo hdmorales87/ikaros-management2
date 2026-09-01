@@ -5,10 +5,83 @@ namespace App\Services;
 use App\Models\Company;
 use App\Models\CompanyModulo;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class CompanyService
 {
+    public function checkCompany(string $documento): ?array
+    {
+        $instalacion = (string) config('app.instalacion');
+        $cloudUrl = (string) config('services.ikaros_cloud.url');
+        $applicationId = (string) config('services.ikaros_cloud.application_id');
+        $applicationKey = (string) config('services.ikaros_cloud.application_key');
+
+        Log::debug('|CompanyService|checkCompany: variables de configuración resueltas', [
+            'instalacion' => $instalacion,
+            'cloud_url' => $cloudUrl,
+            'application_id' => $this->mask($applicationId),
+            'application_key' => $this->mask($applicationKey),
+        ]);
+
+        // The cloud install and any deployment without a configured registry resolve locally.
+        if ($instalacion === 'cloud' || $cloudUrl === '') {
+            return $this->findLocalCompany($documento);
+        }
+
+        return $this->checkCompanyAgainstCloud($documento, $instalacion, $cloudUrl);
+    }
+
+    // Keeps credentials out of the log while still proving they resolved to something.
+    private function mask(string $value): string
+    {
+        if ($value === '') {
+            return '(vacío)';
+        }
+
+        return substr($value, 0, 4).'...'.substr($value, -4);
+    }
+
+    private function checkCompanyAgainstCloud(string $documento, string $instalacion, string $cloudUrl): ?array
+    {
+        Log::info("|CompanyService|checkCompany: consultando registro en la nube para documento '{$documento}'");
+
+        $response = Http::timeout(8)
+            ->withHeaders(array_filter([
+                'X-Application-Id' => config('services.ikaros_cloud.application_id'),
+                'X-Application-Key' => config('services.ikaros_cloud.application_key'),
+            ]))
+            ->post(rtrim($cloudUrl, '/').'/checkCompany', [
+                'company' => $documento,
+                'instalation' => $instalacion,
+            ])
+            ->throw();
+
+        $remote = $response->json();
+        if (empty($remote['uuid'])) {
+            Log::info("|CompanyService|checkCompany: la nube no registra el documento '{$documento}'");
+            return null;
+        }
+
+        // Sync identity only; license fields stay owned by sincronizarEmpresa so a local install can't self-extend them.
+        Company::updateOrCreate(
+            ['documento' => $documento],
+            ['uuid' => $remote['uuid'], 'razon_social' => $remote['razon_social'] ?? null, 'bd_ubicacion' => $instalacion, 'activo' => 1],
+        );
+
+        return $this->findLocalCompany($documento);
+    }
+
+    private function findLocalCompany(string $documento): ?array
+    {
+        $company = Company::where('documento', $documento)
+            ->where('bd_ubicacion', config('app.instalacion'))
+            ->where('activo', 1)
+            ->first(['uuid', 'razon_social']);
+
+        return $company ? $company->only(['uuid', 'razon_social']) : null;
+    }
+
     public function sincronizarEmpresa(object $userData): array
     {
         try {

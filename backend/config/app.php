@@ -56,6 +56,9 @@ return [
 
     'frontend_url' => env('FRONTEND_URL', env('APP_URL', 'http://localhost')),
 
+    // Deployment location ('local' or 'cloud'); determines company lookup, not user input.
+    'instalacion' => env('INSTALACION', 'local'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
-import { getGridRows, gridApi } from '../../api'
+import { assetApi, getGridRows } from '../../api'
 import AttachmentPanel from '../files/AttachmentPanel'
 import TechnicalSheetPanel from '../technical-sheets/TechnicalSheetPanel'
 
@@ -10,11 +10,11 @@ const emptyForm: Form = { nombre: '', codigo: '', marca: '', tipo: '', departame
 
 export default function AssetDetailPage() {
   const { id = '0' } = useParams(); const queryClient = useQueryClient(); const [form, setForm] = useState<Form>(emptyForm); const [loadedId, setLoadedId] = useState(''); const [message, setMessage] = useState('')
-  const asset = useQuery({ queryKey: ['asset', id], queryFn: () => getGridRows('activos', '', { id: Number(id) }) })
+  const asset = useQuery({ queryKey: ['v1-asset', id], queryFn: () => assetApi.find(Number(id)) })
   const types = useQuery({ queryKey: ['asset-types'], queryFn: () => getGridRows('activos_tipos', '', {}, ['nombre']) }); const departments = useQuery({ queryKey: ['asset-departments'], queryFn: () => getGridRows('departamentos', '', {}, ['nombre']) }); const providers = useQuery({ queryKey: ['asset-providers'], queryFn: () => getGridRows('terceros', '', {}, ['razon_social']) }); const states = useQuery({ queryKey: ['asset-states'], queryFn: () => getGridRows('activos_estados', '', {}, ['nombre']) }); const users = useQuery({ queryKey: ['asset-users'], queryFn: () => getGridRows('users', '', { activo: true }, ['nombre', 'apellido']) })
-  const row = asset.data?.[0]
+  const row = asset.data
   if (row && loadedId !== id) { setLoadedId(id); setForm({ nombre: String(row.nombre ?? ''), codigo: String(row.codigo ?? ''), marca: String(row.marca ?? ''), tipo: String(row.id_tipo ?? ''), departamento: String(row.id_departamento ?? ''), proveedor: String(row.id_proveedor ?? ''), estado: String(row.estado ?? ''), asignado: String(row.id_asignado ?? ''), precio: String(row.precio_compra ?? ''), compra: String(row.fecha_compra ?? '').slice(0, 10), factura: String(row.numero_factura ?? ''), ubicacion: String(row.id_ubicacion ?? '') }) }
-  const save = useMutation({ mutationFn: () => gridApi.update('activos', { id: Number(id), nombre: form.nombre, codigo: form.codigo || null, marca: form.marca || null, id_tipo: form.tipo ? Number(form.tipo) : null, id_departamento: form.departamento ? Number(form.departamento) : null, id_proveedor: Number(form.proveedor), estado: form.estado ? Number(form.estado) : null, id_asignado: form.asignado ? Number(form.asignado) : null, precio_compra: form.precio ? Number(form.precio) : null, fecha_compra: form.compra || null, numero_factura: form.factura || null, id_ubicacion: form.ubicacion ? Number(form.ubicacion) : null }), onSuccess: () => { setMessage('Activo actualizado.'); queryClient.invalidateQueries({ queryKey: ['asset', id] }) }, onError: () => setMessage('No fue posible actualizar el activo.') })
+  const save = useMutation({ mutationFn: () => assetApi.update(Number(id), { nombre: form.nombre, codigo: form.codigo || null, marca: form.marca || null, id_tipo: form.tipo ? Number(form.tipo) : null, id_departamento: form.departamento ? Number(form.departamento) : null, id_proveedor: Number(form.proveedor), estado: form.estado ? Number(form.estado) : null, id_asignado: form.asignado ? Number(form.asignado) : null, precio_compra: form.precio ? Number(form.precio) : null, fecha_compra: form.compra || null, numero_factura: form.factura || null, id_ubicacion: form.ubicacion ? Number(form.ubicacion) : null }), onSuccess: () => { setMessage('Activo actualizado.'); queryClient.invalidateQueries({ queryKey: ['v1-asset', id] }); queryClient.invalidateQueries({ queryKey: ['v1-assets'] }) }, onError: () => setMessage('No fue posible actualizar el activo.') })
   function field(key: keyof Form, value: string) { setForm((current) => ({ ...current, [key]: value })) }
   function submit(event: FormEvent) { event.preventDefault(); save.mutate() }
   if (!row) return <section className="panel"><p className="muted">{asset.isLoading ? 'Cargando activo...' : 'Activo no encontrado.'}</p></section>
