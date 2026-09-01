@@ -41,14 +41,23 @@ export default function ModulePage({ definition }: { definition: ModuleDefinitio
   if (definition.path === 'iniciativas/trazabilidad') return <CommitteeApprovalsPage />
   if (definition.path === 'activos') return <AssetIndexPage definition={definition} />
   if (definition.path === 'calendario') return <CalendarPage />
-  if (definition.path === 'config/areas') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre', 'capacidad_atencion']} />
-  if (definition.path === 'config/departamentos') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre']} />
+  if (definition.path === 'config/areas') return <CatalogPage resource="service-areas" title={definition.title} description={definition.description} fields={['nombre', 'capacidad_atencion']} />
+  if (definition.path === 'config/departamentos') return <CatalogPage resource="departments" title={definition.title} description={definition.description} fields={['nombre']} />
   if (definition.path === 'config/ubicaciones') return <LocationsPage />
   if (definition.path === 'config/encuesta-terceros') return <ThirdPartySurveyQuestionsPage />
   if (definition.path === 'config/contratos-notificaciones') return <ContractNotificationsPage />
-  if (definition.path === 'config/categorias') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['id_area', 'nombre']} />
-  if (definition.path === 'config/subcategorias') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['id_categoria', 'nombre']} />
-  if (definition.path.startsWith('config/')) return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['nombre']} />
+  if (definition.path === 'config/categorias') return <CatalogPage resource="service-categories" title={definition.title} description={definition.description} fields={['id_area', 'nombre']} />
+  if (definition.path === 'config/subcategorias') return <CatalogPage resource="service-subcategories" title={definition.title} description={definition.description} fields={['id_categoria', 'nombre']} />
+  if (definition.path === 'config/tipos-activo') return <CatalogPage resource="asset-types" title={definition.title} description={definition.description} fields={['nombre']} />
+  if (definition.path === 'config/monedas') return <CatalogPage resource="currencies" title={definition.title} description={definition.description} fields={['nombre']} />
+  if (definition.path === 'config/tipos-documentacion') return <CatalogPage resource="documentation-types" title={definition.title} description={definition.description} fields={['nombre']} />
+  if (definition.path === 'config/extensiones') return <CatalogPage resource="file-extensions" title={definition.title} description={definition.description} fields={['nombre']} />
+  if (definition.path === 'config/encuesta-satisfaccion') return <CatalogPage resource="satisfaction-questions" title={definition.title} description={definition.description} fields={['nombre']} />
+  if (definition.path === 'config/contratos-estados') return <CatalogPage resource="contract-states" title={definition.title} description={definition.description} fields={['nombre']} />
+  if (definition.path === 'config/contratos-planes-pago') return <CatalogPage resource="payment-plans" title={definition.title} description={definition.description} fields={['nombre']} />
+  if (definition.path === 'config/dias-festivos') return <CatalogPage resource="holidays" title={definition.title} description={definition.description} fields={['fecha', 'descripcion']} />
+  if (definition.path === 'config/riesgos/probabilidad') return <CatalogPage resource="risk-probabilities" title={definition.title} description={definition.description} fields={['nombre']} />
+  if (definition.path === 'config/riesgos/impacto') return <CatalogPage resource="risk-impacts" title={definition.title} description={definition.description} fields={['nombre']} />
   if (definition.path === 'incidencias') return <RequestBoardPage table="incidencias" type="incidencia" title={definition.title} />
   if (definition.path === 'problemas') return <RequestBoardPage table="incidencias" type="problema" title={definition.title} filter={{ problema: true }} />
   if (definition.path === 'servicios') return <RequestBoardPage table="servicios" type="servicio" title={definition.title} />
@@ -58,6 +67,5 @@ export default function ModulePage({ definition }: { definition: ModuleDefinitio
   if (definition.path === 'clientes') return <ThirdPartiesPage kind="cliente" />
   if (definition.path === 'proveedores') return <ThirdPartiesPage kind="proveedor" />
   if (definition.path === 'config/empresa/modulos') return <CompanyModulesPage />
-  if (definition.path === 'config/dias-festivos') return <CatalogPage table={definition.table} title={definition.title} description={definition.description} fields={['fecha', 'descripcion']} />
   return <DataGridPage config={definition} />
 }

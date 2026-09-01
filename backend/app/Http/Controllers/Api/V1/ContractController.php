@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Services\ContractService;
+use App\Services\FileManagerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ContractController extends Controller
 {
-    public function __construct(private readonly ContractService $contractService)
+    public function __construct(private readonly ContractService $contractService, private readonly FileManagerService $fileManagerService)
     {
     }
 
@@ -31,6 +34,11 @@ class ContractController extends Controller
     public function formOptionsForProvider(Request $request, int $provider): JsonResponse
     {
         return $this->formOptions($request, $provider, 'proveedor');
+    }
+
+    public function notifications(Request $request): JsonResponse
+    {
+        return response()->json($this->contractService->notifications((string) $request->header('x-uuid', '')));
     }
 
     public function paymentsForClient(Request $request, int $client, int $contract): JsonResponse
@@ -91,6 +99,36 @@ class ContractController extends Controller
     public function deactivatePaymentForProvider(Request $request, int $provider, int $contract, int $payment): JsonResponse
     {
         return $this->deactivatePayment($request, $provider, $contract, $payment, 'proveedor');
+    }
+
+    public function attachmentsForClient(Request $request, int $client, int $contract): JsonResponse
+    {
+        return $this->attachments($request, $client, $contract, 'cliente');
+    }
+
+    public function attachmentsForProvider(Request $request, int $provider, int $contract): JsonResponse
+    {
+        return $this->attachments($request, $provider, $contract, 'proveedor');
+    }
+
+    public function storeAttachmentForClient(Request $request, int $client, int $contract): JsonResponse
+    {
+        return $this->storeAttachment($request, $client, $contract, 'cliente');
+    }
+
+    public function storeAttachmentForProvider(Request $request, int $provider, int $contract): JsonResponse
+    {
+        return $this->storeAttachment($request, $provider, $contract, 'proveedor');
+    }
+
+    public function downloadAttachmentForClient(Request $request, int $client, int $contract, int $attachment): StreamedResponse
+    {
+        return $this->downloadAttachment($request, $client, $contract, $attachment, 'cliente');
+    }
+
+    public function downloadAttachmentForProvider(Request $request, int $provider, int $contract, int $attachment): StreamedResponse
+    {
+        return $this->downloadAttachment($request, $provider, $contract, $attachment, 'proveedor');
     }
 
     private function index(Request $request, int $thirdPartyId, string $type): JsonResponse
@@ -181,6 +219,36 @@ class ContractController extends Controller
         return $deactivated
             ? response()->json(['message' => 'Pago desactivado.'])
             : response()->json(['message' => 'Pago no encontrado.'], 404);
+    }
+
+    private function attachments(Request $request, int $thirdPartyId, int $contractId, string $type): JsonResponse
+    {
+        $result = $this->contractService->attachments($thirdPartyId, $contractId, $type, (string) $request->header('x-uuid', ''));
+
+        return $result !== null
+            ? response()->json($result)
+            : response()->json(['message' => 'Contrato no encontrado.'], 404);
+    }
+
+    private function storeAttachment(Request $request, int $thirdPartyId, int $contractId, string $type): JsonResponse
+    {
+        $data = $request->validate(['file' => ['required', 'file', 'max:5120']]);
+        $result = $this->contractService->uploadAttachment($thirdPartyId, $contractId, $type, $this->jwtUserId($request), $data['file'], (string) $request->header('x-uuid', ''));
+
+        return $result
+            ? response()->json($result, 201)
+            : response()->json(['message' => 'Contrato no encontrado.'], 404);
+    }
+
+    private function downloadAttachment(Request $request, int $thirdPartyId, int $contractId, int $attachmentId, string $type): StreamedResponse
+    {
+        $uuid = (string) $request->header('x-uuid', '');
+        $attachment = $this->contractService->attachment($thirdPartyId, $contractId, $attachmentId, $type, $uuid);
+        abort_unless($attachment, 404, 'Adjunto no encontrado.');
+        $path = $this->fileManagerService->path($uuid, 'terceros_contratos_adjuntos', $attachment['nombre_archivo']);
+        abort_unless(Storage::disk('public')->exists($path), 404, 'Archivo no encontrado.');
+
+        return Storage::disk('public')->download($path, $attachment['nombre_archivo']);
     }
 
     private function contractData(Request $request, bool $creating): array

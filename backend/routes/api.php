@@ -68,6 +68,35 @@ Route::middleware(['security.headers', 'authenticate.jwt'])->group(function () {
     Route::get('/downloadFile/{uuid}/{folder}/{file}', [App\Http\Controllers\FileManagerController::class, 'downloadFile']);
     Route::post('/importExcelDatabase', [App\Http\Controllers\FileManagerController::class, 'importExcelDatabase']);
     Route::prefix('v1')->group(function () {
+        Route::get('/dashboard/summary', [App\Http\Controllers\Api\V1\DashboardController::class, 'summary']);
+        Route::get('/role-management', [App\Http\Controllers\RoleController::class, 'managementData'])->middleware('permission:32');
+        Route::get('/project-hours', [App\Http\Controllers\Api\V1\ProjectHoursController::class, 'index'])->middleware('permission:91');
+        Route::get('/operational-reports/requests', [App\Http\Controllers\Api\V1\OperationalReportController::class, 'requests'])->middleware('permission:18');
+        foreach ([
+            'service-areas' => 34,
+            'departments' => 55,
+            'service-categories' => 34,
+            'service-subcategories' => 34,
+            'asset-types' => 33,
+            'currencies' => 57,
+            'documentation-types' => 56,
+            'file-extensions' => 87,
+            'satisfaction-questions' => 36,
+            'contract-states' => 36,
+            'payment-plans' => 36,
+            'holidays' => 96,
+            'risk-probabilities' => 102,
+            'risk-impacts' => 103,
+            'imap-accounts' => 51,
+        ] as $catalog => $permission) {
+            Route::prefix('/configuration/'.$catalog)->middleware('permission:'.$permission)->group(function () use ($catalog): void {
+                Route::get('/', [App\Http\Controllers\Api\V1\CatalogController::class, 'index'])->defaults('catalog', $catalog);
+                Route::post('/', [App\Http\Controllers\Api\V1\CatalogController::class, 'store'])->defaults('catalog', $catalog);
+                Route::put('/{item}', [App\Http\Controllers\Api\V1\CatalogController::class, 'update'])->defaults('catalog', $catalog);
+                Route::delete('/{item}', [App\Http\Controllers\Api\V1\CatalogController::class, 'deactivate'])->defaults('catalog', $catalog);
+            });
+        }
+        Route::get('/contract-notifications', [App\Http\Controllers\Api\V1\ContractController::class, 'notifications'])->middleware('permission:36');
         Route::get('/assets', [App\Http\Controllers\Api\V1\ActivoController::class, 'index'])->middleware('permission:11');
         Route::get('/assets/form-options', [App\Http\Controllers\Api\V1\ActivoController::class, 'formOptions'])->middleware('permission:11');
         Route::get('/assets/{asset}', [App\Http\Controllers\Api\V1\ActivoController::class, 'show'])->middleware('permission:11');
@@ -92,6 +121,9 @@ Route::middleware(['security.headers', 'authenticate.jwt'])->group(function () {
         Route::post('/clients/{client}/contracts', [App\Http\Controllers\Api\V1\ContractController::class, 'storeForClient'])->middleware('permission:62');
         Route::put('/clients/{client}/contracts/{contract}', [App\Http\Controllers\Api\V1\ContractController::class, 'updateForClient'])->middleware('permission:62');
         Route::delete('/clients/{client}/contracts/{contract}', [App\Http\Controllers\Api\V1\ContractController::class, 'deactivateForClient'])->middleware('permission:62');
+        Route::get('/clients/{client}/contracts/{contract}/attachments', [App\Http\Controllers\Api\V1\ContractController::class, 'attachmentsForClient'])->middleware('permission:62');
+        Route::post('/clients/{client}/contracts/{contract}/attachments', [App\Http\Controllers\Api\V1\ContractController::class, 'storeAttachmentForClient'])->middleware('permission:62');
+        Route::get('/clients/{client}/contracts/{contract}/attachments/{attachment}/download', [App\Http\Controllers\Api\V1\ContractController::class, 'downloadAttachmentForClient'])->middleware('permission:62');
         Route::get('/clients/{client}/contracts/{contract}/payments', [App\Http\Controllers\Api\V1\ContractController::class, 'paymentsForClient'])->middleware('permission:62');
         Route::post('/clients/{client}/contracts/{contract}/payments', [App\Http\Controllers\Api\V1\ContractController::class, 'storePaymentForClient'])->middleware('permission:62');
         Route::delete('/clients/{client}/contracts/{contract}/payments/{payment}', [App\Http\Controllers\Api\V1\ContractController::class, 'deactivatePaymentForClient'])->middleware('permission:62');
@@ -100,6 +132,9 @@ Route::middleware(['security.headers', 'authenticate.jwt'])->group(function () {
         Route::post('/providers/{provider}/contracts', [App\Http\Controllers\Api\V1\ContractController::class, 'storeForProvider'])->middleware('permission:14');
         Route::put('/providers/{provider}/contracts/{contract}', [App\Http\Controllers\Api\V1\ContractController::class, 'updateForProvider'])->middleware('permission:14');
         Route::delete('/providers/{provider}/contracts/{contract}', [App\Http\Controllers\Api\V1\ContractController::class, 'deactivateForProvider'])->middleware('permission:14');
+        Route::get('/providers/{provider}/contracts/{contract}/attachments', [App\Http\Controllers\Api\V1\ContractController::class, 'attachmentsForProvider'])->middleware('permission:14');
+        Route::post('/providers/{provider}/contracts/{contract}/attachments', [App\Http\Controllers\Api\V1\ContractController::class, 'storeAttachmentForProvider'])->middleware('permission:14');
+        Route::get('/providers/{provider}/contracts/{contract}/attachments/{attachment}/download', [App\Http\Controllers\Api\V1\ContractController::class, 'downloadAttachmentForProvider'])->middleware('permission:14');
         Route::get('/providers/{provider}/contracts/{contract}/payments', [App\Http\Controllers\Api\V1\ContractController::class, 'paymentsForProvider'])->middleware('permission:14');
         Route::post('/providers/{provider}/contracts/{contract}/payments', [App\Http\Controllers\Api\V1\ContractController::class, 'storePaymentForProvider'])->middleware('permission:14');
         Route::delete('/providers/{provider}/contracts/{contract}/payments/{payment}', [App\Http\Controllers\Api\V1\ContractController::class, 'deactivatePaymentForProvider'])->middleware('permission:14');

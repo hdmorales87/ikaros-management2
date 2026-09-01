@@ -7,6 +7,16 @@ use Illuminate\Database\Connection;
 
 class RoleService
 {
+    public function managementData(string $uuid): array
+    {
+        $connection = $this->connection($uuid);
+
+        return [
+            'roles' => $connection->table('roles')->select(['id', 'nombre'])->where('activo', 1)->orderBy('nombre')->get()->map(fn ($role) => (array) $role)->all(),
+            'permissions' => $connection->table('permisos')->select(['id', 'nombre', 'descripcion'])->where('activo', 1)->orderBy('nombre')->get()->map(fn ($permission) => (array) $permission)->all(),
+        ];
+    }
+
     public function permissions(int $roleId, string $uuid): array
     {
         return $this->connection($uuid)->table('roles_permisos')->where('id_rol', $roleId)->pluck('id_permiso')->map(fn ($id) => (int) $id)->all();

@@ -3,10 +3,15 @@
 namespace App\Services;
 
 use App\Models\Company;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Database\Connection;
 
 class ContractService
 {
+    public function __construct(private readonly FileManagerService $fileManagerService)
+    {
+    }
+
     public function paginate(int $thirdPartyId, string $type, string $uuid, string $search, int $perPage, string $sort): ?array
     {
         $connection = $this->connection($uuid);
@@ -156,6 +161,61 @@ class ContractService
             ->update(['activo' => 0]) === 1;
     }
 
+    public function attachments(int $thirdPartyId, int $contractId, string $type, string $uuid): ?array
+    {
+        $connection = $this->connection($uuid);
+        if (!$this->contract($connection, $thirdPartyId, $contractId, $type)) {
+            return null;
+        }
+
+        return $connection->table('terceros_contratos_adjuntos')
+            ->select(['id', 'nombre_archivo', 'fecha', 'id_usuario'])
+            ->where('id_maestro', $contractId)
+            ->orderByDesc('fecha')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn ($attachment) => (array) $attachment)
+            ->all();
+    }
+
+    public function uploadAttachment(int $thirdPartyId, int $contractId, string $type, int $userId, UploadedFile $file, string $uuid): ?array
+    {
+        $connection = $this->connection($uuid);
+        if (!$this->contract($connection, $thirdPartyId, $contractId, $type)) {
+            return null;
+        }
+        abort_if($userId < 1 || !$connection->table('users')->where('id', $userId)->where('activo', 1)->exists(), 422, 'El usuario autenticado no está disponible.');
+
+        $filename = $this->fileManagerService->upload($file, $uuid, 'terceros_contratos_adjuntos', (string) $contractId);
+        $attachmentId = $connection->table('terceros_contratos_adjuntos')->insertGetId([
+            'id_maestro' => $contractId,
+            'fecha' => now(),
+            'id_usuario' => $userId,
+            'nombre_archivo' => $filename,
+        ]);
+
+        return (array) $connection->table('terceros_contratos_adjuntos')
+            ->select(['id', 'nombre_archivo', 'fecha', 'id_usuario'])
+            ->where('id', $attachmentId)
+            ->first();
+    }
+
+    public function attachment(int $thirdPartyId, int $contractId, int $attachmentId, string $type, string $uuid): ?array
+    {
+        $connection = $this->connection($uuid);
+        if (!$this->contract($connection, $thirdPartyId, $contractId, $type)) {
+            return null;
+        }
+
+        $attachment = $connection->table('terceros_contratos_adjuntos')
+            ->select(['id', 'nombre_archivo'])
+            ->where('id', $attachmentId)
+            ->where('id_maestro', $contractId)
+            ->first();
+
+        return $attachment ? (array) $attachment : null;
+    }
+
     public function formOptions(int $thirdPartyId, string $type, string $uuid): ?array
     {
         $connection = $this->connection($uuid);
@@ -176,6 +236,23 @@ class ContractService
             'payment_plans' => $connection->table('terceros_contratos_planes_pagos')->select(['id', 'nombre'])->where('activo', 1)->orderBy('nombre')->get()->map(fn ($row) => (array) $row)->all(),
             'users' => $connection->table('users')->select(['id', 'nombre', 'apellido'])->where('activo', 1)->orderBy('nombre')->orderBy('apellido')->get()->map(fn ($row) => (array) $row)->all(),
         ];
+    }
+
+    public function notifications(string $uuid): array
+    {
+        return $this->connection($uuid)->table('terceros_contratos_notificaciones as notifications')
+            ->join('terceros_contratos as contracts', 'contracts.id', '=', 'notifications.id_contrato')
+            ->select([
+                'notifications.id', 'notifications.id_contrato', 'contracts.nombre as contrato', 'contracts.tipo',
+                'notifications.primera_notificacion_vencimiento', 'notifications.primera_notificacion_renovacion',
+                'notifications.primera_notificacion_pagos', 'notifications.activo',
+            ])
+            ->where('notifications.activo', 1)
+            ->where('contracts.activo', 1)
+            ->orderByDesc('notifications.id')
+            ->get()
+            ->map(fn ($notification) => (array) $notification)
+            ->all();
     }
 
     private function applySort($query, string $sort): void

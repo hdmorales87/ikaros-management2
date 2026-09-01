@@ -32,4 +32,9 @@ class RoleController extends Controller
     {
         return response()->json($this->roleService->permissions($idRol, (string) $request->header('x-uuid', '')));
     }
+
+    public function managementData(Request $request): JsonResponse
+    {
+        return response()->json($this->roleService->managementData((string) $request->header('x-uuid', '')));
+    }
 }

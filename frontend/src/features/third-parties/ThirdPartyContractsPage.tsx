@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { contractApi, GridRow } from '../../api'
-import AttachmentPanel from '../files/AttachmentPanel'
+import ContractAttachmentPanel from './ContractAttachmentPanel'
 
 type Kind = 'cliente' | 'proveedor'
 
@@ -323,7 +323,7 @@ export default function ThirdPartyContractsPage({ kind }: { kind: Kind }) {
           </div>
         </div>
 
-        <AttachmentPanel table="terceros_contratos_adjuntos" id={selectedContractId} />
+        <ContractAttachmentPanel kind={kind} thirdPartyId={thirdPartyId} contractId={selectedContractId} />
       </>
     )}
   </section>

@@ -1,14 +1,14 @@
 import { FormEvent, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getGridRows, gridApi, GridRow } from '../../api'
+import { CatalogResource, catalogApi, GridRow } from '../../api'
 
-type Props = { table: string; title: string; description: string; fields: string[]; sensitiveFields?: string[] }
+type Props = { resource: CatalogResource; title: string; description: string; fields: string[]; sensitiveFields?: string[] }
 
-export default function CatalogPage({ table, title, description, fields, sensitiveFields = [] }: Props) {
+export default function CatalogPage({ resource, title, description, fields, sensitiveFields = [] }: Props) {
   const displayFields = fields.filter((field) => !sensitiveFields.includes(field))
-  const queryClient = useQueryClient(); const [values, setValues] = useState<Record<string, string>>({}); const [editingId, setEditingId] = useState<number | null>(null); const [message, setMessage] = useState(''); const rows = useQuery({ queryKey: ['catalog', table], queryFn: () => getGridRows(table, '', {}, displayFields, ['id', ...displayFields]) })
-  const save = useMutation({ mutationFn: () => { const payload = editingId ? Object.fromEntries(Object.entries(values).filter(([field, value]) => !sensitiveFields.includes(field) || value !== '')) : values; return editingId ? gridApi.update(table, { ...payload, id: editingId }) : gridApi.insert(table, payload) }, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['catalog', table] }); setValues({}); setEditingId(null); setMessage(editingId ? 'Registro actualizado.' : 'Registro creado correctamente.') }, onError: () => setMessage('No fue posible guardar el registro.') })
-  const deactivate = useMutation({ mutationFn: (id: number) => gridApi.deactivate(table, id), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['catalog', table] }) })
+  const queryClient = useQueryClient(); const [values, setValues] = useState<Record<string, string>>({}); const [editingId, setEditingId] = useState<number | null>(null); const [message, setMessage] = useState(''); const rows = useQuery({ queryKey: ['v1-catalog', resource], queryFn: () => catalogApi.list(resource) })
+  const save = useMutation({ mutationFn: () => { const payload = editingId ? Object.fromEntries(Object.entries(values).filter(([field, value]) => !sensitiveFields.includes(field) || value !== '')) : values; return editingId ? catalogApi.update(resource, editingId, payload) : catalogApi.create(resource, payload) }, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['v1-catalog', resource] }); setValues({}); setEditingId(null); setMessage(editingId ? 'Registro actualizado.' : 'Registro creado correctamente.') }, onError: () => setMessage('No fue posible guardar el registro.') })
+  const deactivate = useMutation({ mutationFn: (id: number) => catalogApi.deactivate(resource, id), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['v1-catalog', resource] }) })
   function submit(event: FormEvent) { event.preventDefault(); save.mutate() }
   function edit(row: GridRow) { setEditingId(Number(row.id)); setValues(Object.fromEntries(fields.map((field) => [field, String(row[field] ?? '')]))); setMessage('') }
   function cancel() { setEditingId(null); setValues({}) }

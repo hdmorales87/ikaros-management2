@@ -127,6 +127,11 @@ export type Incident = { id: number; asunto: string; estado: number; prioridad: 
 export type ThirdParty = { id: number; documento: string | null; razon_social: string | null; nombre_comercial: string | null; email: string | null; puntaje_cliente?: number | null; puntaje_proveedor?: number | null }
 export type ContractFormOption = { id: number; nombre: string; apellido?: string | null }
 export type ContractFormOptions = { third_party: { id: number; razon_social: string | null; nombre_comercial: string | null }; currencies: ContractFormOption[]; states: ContractFormOption[]; payment_plans: ContractFormOption[]; users: ContractFormOption[] }
+export type ContractAttachment = { id: number; nombre_archivo: string; fecha: string; id_usuario: number }
+export type ContractNotification = { id: number; id_contrato: number; contrato: string; tipo: 'cliente' | 'proveedor'; primera_notificacion_vencimiento: string | null; primera_notificacion_renovacion: string | null; primera_notificacion_pagos: string | null; activo: number }
+export type DashboardSummary = { incidents: number; services: number; assets: number; projects: number; trainings: number }
+export type OperationalReportRow = { id: number; asunto: string | null; estado: number | null; prioridad: number | null; fecha: string | null; tipo: 'Incidencia' | 'Problema' | 'Servicio' }
+export type RoleManagementData = { roles: { id: number; nombre: string }[]; permissions: { id: number; nombre: string; descripcion: string | null }[] }
 export type Project = { id: number; codigo: string | null; nombre: string; estado: number | null; fecha_inicio: string | null; fecha_final: string | null }
 export type RequestDetail = Record<string, unknown> & { id: number; asunto?: string; descripcion?: string; estado?: number; prioridad?: number | null }
 export type RequestFollowup = { id: number; estado: string; observacion: string; id_usuario: number; fecha: string }
@@ -156,11 +161,14 @@ export const requestApi = {
 }
 
 export const hoursApi = {
+  list: () => api.get<GridRow[]>('/v1/project-hours').then(({ data }) => data),
   notifyValidation: (id: number, tipo: string) => api.post('/notificarValidacionHoras', { id, tipo }).then(({ data }) => data),
   notifyConfirmation: (ids: number[], tipo: string) => api.post('/notificarConfirmacionHoras', { ids: JSON.stringify(ids), tipo }).then(({ data }) => data),
 }
 
 export type GridRow = Record<string, unknown> & { id?: number }
+export type CatalogResource = 'service-areas' | 'departments' | 'service-categories' | 'service-subcategories' | 'asset-types' | 'currencies' | 'documentation-types' | 'file-extensions' | 'satisfaction-questions' | 'contract-states' | 'payment-plans' | 'holidays' | 'risk-probabilities' | 'risk-impacts'
+  | 'imap-accounts'
 
 function encodePayload(value: unknown): string {
   const bytes = new TextEncoder().encode(JSON.stringify(value))
@@ -187,6 +195,13 @@ export const gridApi = {
   update: (table: string, data: Record<string, unknown>) => api.put('/dataGrid', { payload: encodePayload({ tabla: table, arrayData: data }) }).then(({ data: response }) => response),
   deactivate: (table: string, id: number) => api.delete('/dataGrid', { data: { payload: encodePayload({ tabla: table, id, actionDelete: 'deactivate' }) } }).then(({ data: response }) => response),
   remove: (table: string, id: number) => api.delete('/dataGrid', { data: { payload: encodePayload({ tabla: table, id, actionDelete: 'delete' }) } }).then(({ data: response }) => response),
+}
+
+export const catalogApi = {
+  list: (resource: CatalogResource) => api.get<GridRow[]>(`/v1/configuration/${resource}`).then(({ data }) => data),
+  create: (resource: CatalogResource, payload: Record<string, unknown>) => api.post<GridRow>(`/v1/configuration/${resource}`, payload).then(({ data }) => data),
+  update: (resource: CatalogResource, id: number, payload: Record<string, unknown>) => api.put<GridRow>(`/v1/configuration/${resource}/${id}`, payload).then(({ data }) => data),
+  deactivate: (resource: CatalogResource, id: number) => api.delete(`/v1/configuration/${resource}/${id}`).then(({ data }) => data),
 }
 
 export const publicApi = {
@@ -230,6 +245,7 @@ export const thirdPartyApi = {
 }
 
 export const contractApi = {
+  notifications: () => api.get<ContractNotification[]>('/v1/contract-notifications').then(({ data }) => data),
   formOptionsForClient: (id: number) => api.get<ContractFormOptions>(`/v1/clients/${id}/contract-form-options`).then(({ data }) => data),
   formOptionsForProvider: (id: number) => api.get<ContractFormOptions>(`/v1/providers/${id}/contract-form-options`).then(({ data }) => data),
   listForClient: (id: number, params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<GridRow>>(`/v1/clients/${id}/contracts`, { params }).then(({ data }) => data),
@@ -246,6 +262,24 @@ export const contractApi = {
   createPaymentForProvider: (providerId: number, contractId: number, payload: Record<string, unknown>) => api.post<GridRow>(`/v1/providers/${providerId}/contracts/${contractId}/payments`, payload).then(({ data }) => data),
   deactivatePaymentForClient: (clientId: number, contractId: number, paymentId: number) => api.delete(`/v1/clients/${clientId}/contracts/${contractId}/payments/${paymentId}`).then(({ data }) => data),
   deactivatePaymentForProvider: (providerId: number, contractId: number, paymentId: number) => api.delete(`/v1/providers/${providerId}/contracts/${contractId}/payments/${paymentId}`).then(({ data }) => data),
+  attachmentsForClient: (clientId: number, contractId: number) => api.get<ContractAttachment[]>(`/v1/clients/${clientId}/contracts/${contractId}/attachments`).then(({ data }) => data),
+  attachmentsForProvider: (providerId: number, contractId: number) => api.get<ContractAttachment[]>(`/v1/providers/${providerId}/contracts/${contractId}/attachments`).then(({ data }) => data),
+  uploadAttachmentForClient: (clientId: number, contractId: number, file: File) => { const body = new FormData(); body.append('file', file); return api.post<ContractAttachment>(`/v1/clients/${clientId}/contracts/${contractId}/attachments`, body, { headers: { 'Content-Type': 'multipart/form-data' } }).then(({ data }) => data) },
+  uploadAttachmentForProvider: (providerId: number, contractId: number, file: File) => { const body = new FormData(); body.append('file', file); return api.post<ContractAttachment>(`/v1/providers/${providerId}/contracts/${contractId}/attachments`, body, { headers: { 'Content-Type': 'multipart/form-data' } }).then(({ data }) => data) },
+  downloadAttachmentForClient: (clientId: number, contractId: number, attachmentId: number) => api.get(`/v1/clients/${clientId}/contracts/${contractId}/attachments/${attachmentId}/download`, { responseType: 'blob' }).then(({ data }) => data as Blob),
+  downloadAttachmentForProvider: (providerId: number, contractId: number, attachmentId: number) => api.get(`/v1/providers/${providerId}/contracts/${contractId}/attachments/${attachmentId}/download`, { responseType: 'blob' }).then(({ data }) => data as Blob),
+}
+
+export const dashboardApi = {
+  summary: () => api.get<DashboardSummary>('/v1/dashboard/summary').then(({ data }) => data),
+}
+
+export const operationalReportApi = {
+  requests: () => api.get<OperationalReportRow[]>('/v1/operational-reports/requests').then(({ data }) => data),
+}
+
+export const roleManagementApi = {
+  data: () => api.get<RoleManagementData>('/v1/role-management').then(({ data }) => data),
 }
 
 export const projectApi = {
