@@ -130,6 +130,10 @@ export type ContractFormOptions = { third_party: { id: number; razon_social: str
 export type ContractAttachment = { id: number; nombre_archivo: string; fecha: string; id_usuario: number }
 export type ContractNotification = { id: number; id_contrato: number; contrato: string; tipo: 'cliente' | 'proveedor'; primera_notificacion_vencimiento: string | null; primera_notificacion_renovacion: string | null; primera_notificacion_pagos: string | null; activo: number }
 export type DashboardSummary = { incidents: number; services: number; assets: number; projects: number; trainings: number }
+export type CalendarEvent = { date: string; title: string; kind: string; tone: 'blue' | 'violet' | 'teal' | 'amber' }
+export type ThirdPartySurveyQuestion = { id: number; tipo: 'cliente' | 'proveedor'; nombre: string }
+export type Location = { id: number; id_departamento: number; nombre: string }
+export type ImapRule = { id: number; palabra_clave: string; tipo: 'incidencia' | 'problema' | 'servicio'; impacto: number; urgencia: number; id_area: number; id_categoria: number; id_subcategoria: number; asunto_default: string }
 export type OperationalReportRow = { id: number; asunto: string | null; estado: number | null; prioridad: number | null; fecha: string | null; tipo: 'Incidencia' | 'Problema' | 'Servicio' }
 export type RoleManagementData = { roles: { id: number; nombre: string }[]; permissions: { id: number; nombre: string; descripcion: string | null }[] }
 export type Project = { id: number; codigo: string | null; nombre: string; estado: number | null; fecha_inicio: string | null; fecha_final: string | null }
@@ -272,6 +276,31 @@ export const contractApi = {
 
 export const dashboardApi = {
   summary: () => api.get<DashboardSummary>('/v1/dashboard/summary').then(({ data }) => data),
+}
+
+export const calendarApi = {
+  events: (month: string) => api.get<CalendarEvent[]>('/v1/calendar/events', { params: { month } }).then(({ data }) => data),
+}
+
+export const thirdPartySurveyQuestionApi = {
+  list: (type: ThirdPartySurveyQuestion['tipo']) => api.get<ThirdPartySurveyQuestion[]>('/v1/third-party-survey-questions', { params: { type } }).then(({ data }) => data),
+  create: (payload: Omit<ThirdPartySurveyQuestion, 'id'>) => api.post<ThirdPartySurveyQuestion>('/v1/third-party-survey-questions', payload).then(({ data }) => data),
+  update: (id: number, payload: Omit<ThirdPartySurveyQuestion, 'id'>) => api.put<ThirdPartySurveyQuestion>(`/v1/third-party-survey-questions/${id}`, payload).then(({ data }) => data),
+  deactivate: (id: number) => api.delete(`/v1/third-party-survey-questions/${id}`).then(({ data }) => data),
+}
+
+export const locationApi = {
+  list: () => api.get<Location[]>('/v1/locations').then(({ data }) => data),
+  create: (payload: Omit<Location, 'id'>) => api.post<Location>('/v1/locations', payload).then(({ data }) => data),
+  update: (id: number, payload: Omit<Location, 'id'>) => api.put<Location>(`/v1/locations/${id}`, payload).then(({ data }) => data),
+  deactivate: (id: number) => api.delete(`/v1/locations/${id}`).then(({ data }) => data),
+}
+
+export const imapApi = {
+  rules: (accountId: number) => api.get<ImapRule[]>(`/v1/imap/accounts/${accountId}/rules`).then(({ data }) => data),
+  createRule: (accountId: number, payload: Omit<ImapRule, 'id'>) => api.post<ImapRule>(`/v1/imap/accounts/${accountId}/rules`, payload).then(({ data }) => data),
+  updateRule: (accountId: number, ruleId: number, payload: Omit<ImapRule, 'id'>) => api.put<ImapRule>(`/v1/imap/accounts/${accountId}/rules/${ruleId}`, payload).then(({ data }) => data),
+  deactivateRule: (accountId: number, ruleId: number) => api.delete(`/v1/imap/accounts/${accountId}/rules/${ruleId}`).then(({ data }) => data),
 }
 
 export const operationalReportApi = {

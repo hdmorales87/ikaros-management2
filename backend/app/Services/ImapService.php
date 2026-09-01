@@ -26,6 +26,56 @@ class ImapService
         return ['msg' => 'success', 'folders' => $folders->count()];
     }
 
+    public function rules(string $uuid, int $accountId): ?array
+    {
+        $connection = $this->connection($uuid);
+        if (!$this->activeAccount($connection, $accountId)) {
+            return null;
+        }
+
+        return $connection->table('imap_reglas')
+            ->select(['id', 'palabra_clave', 'tipo', 'impacto', 'urgencia', 'id_area', 'id_categoria', 'id_subcategoria', 'asunto_default'])
+            ->where('id_imap', $accountId)
+            ->where('activo', 1)
+            ->orderBy('palabra_clave')
+            ->get()
+            ->map(fn ($rule) => (array) $rule)
+            ->all();
+    }
+
+    public function createRule(string $uuid, int $accountId, array $data): ?array
+    {
+        $connection = $this->connection($uuid);
+        if (!$this->activeAccount($connection, $accountId)) {
+            return null;
+        }
+
+        $ruleId = $connection->table('imap_reglas')->insertGetId([...$data, 'id_imap' => $accountId, 'activo' => 1]);
+        return $this->rule($connection, $accountId, $ruleId);
+    }
+
+    public function updateRule(string $uuid, int $accountId, int $ruleId, array $data): ?array
+    {
+        $connection = $this->connection($uuid);
+        if (!$this->activeAccount($connection, $accountId)) {
+            return null;
+        }
+
+        $updated = $connection->table('imap_reglas')
+            ->where('id', $ruleId)
+            ->where('id_imap', $accountId)
+            ->where('activo', 1)
+            ->update($data);
+        return $updated ? $this->rule($connection, $accountId, $ruleId) : null;
+    }
+
+    public function deactivateRule(string $uuid, int $accountId, int $ruleId): bool
+    {
+        $connection = $this->connection($uuid);
+        return $this->activeAccount($connection, $accountId)
+            && $connection->table('imap_reglas')->where('id', $ruleId)->where('id_imap', $accountId)->where('activo', 1)->update(['activo' => 0]) > 0;
+    }
+
     public function sync(string $uuid): array
     {
         $connection = $this->connection($uuid);
@@ -69,6 +119,20 @@ class ImapService
             'password' => $account->password,
             'authentication' => null,
         ]);
+    }
+
+    private function activeAccount(Connection $connection, int $accountId): bool
+    {
+        return $connection->table('imap')->where('id', $accountId)->where('activo', 1)->exists();
+    }
+
+    private function rule(Connection $connection, int $accountId, int $ruleId): array
+    {
+        return (array) $connection->table('imap_reglas')
+            ->select(['id', 'palabra_clave', 'tipo', 'impacto', 'urgencia', 'id_area', 'id_categoria', 'id_subcategoria', 'asunto_default'])
+            ->where('id', $ruleId)
+            ->where('id_imap', $accountId)
+            ->first();
     }
 
     private function encryption(mixed $tls): string|false

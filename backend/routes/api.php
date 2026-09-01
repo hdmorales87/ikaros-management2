@@ -69,6 +69,19 @@ Route::middleware(['security.headers', 'authenticate.jwt'])->group(function () {
     Route::post('/importExcelDatabase', [App\Http\Controllers\FileManagerController::class, 'importExcelDatabase']);
     Route::prefix('v1')->group(function () {
         Route::get('/dashboard/summary', [App\Http\Controllers\Api\V1\DashboardController::class, 'summary']);
+        Route::get('/calendar/events', [App\Http\Controllers\Api\V1\CalendarController::class, 'events']);
+        Route::get('/third-party-survey-questions', [App\Http\Controllers\Api\V1\ThirdPartySurveyQuestionController::class, 'index'])->middleware('permission:36');
+        Route::post('/third-party-survey-questions', [App\Http\Controllers\Api\V1\ThirdPartySurveyQuestionController::class, 'store'])->middleware('permission:36');
+        Route::put('/third-party-survey-questions/{question}', [App\Http\Controllers\Api\V1\ThirdPartySurveyQuestionController::class, 'update'])->middleware('permission:36');
+        Route::delete('/third-party-survey-questions/{question}', [App\Http\Controllers\Api\V1\ThirdPartySurveyQuestionController::class, 'destroy'])->middleware('permission:36');
+        Route::get('/locations', [App\Http\Controllers\Api\V1\LocationController::class, 'index'])->middleware('permission:55');
+        Route::post('/locations', [App\Http\Controllers\Api\V1\LocationController::class, 'store'])->middleware('permission:55');
+        Route::put('/locations/{location}', [App\Http\Controllers\Api\V1\LocationController::class, 'update'])->middleware('permission:55');
+        Route::delete('/locations/{location}', [App\Http\Controllers\Api\V1\LocationController::class, 'destroy'])->middleware('permission:55');
+        Route::get('/imap/accounts/{account}/rules', [App\Http\Controllers\Api\V1\ImapRuleController::class, 'index'])->middleware('permission:51');
+        Route::post('/imap/accounts/{account}/rules', [App\Http\Controllers\Api\V1\ImapRuleController::class, 'store'])->middleware('permission:51');
+        Route::put('/imap/accounts/{account}/rules/{rule}', [App\Http\Controllers\Api\V1\ImapRuleController::class, 'update'])->middleware('permission:51');
+        Route::delete('/imap/accounts/{account}/rules/{rule}', [App\Http\Controllers\Api\V1\ImapRuleController::class, 'destroy'])->middleware('permission:51');
         Route::get('/role-management', [App\Http\Controllers\RoleController::class, 'managementData'])->middleware('permission:32');
         Route::get('/project-hours', [App\Http\Controllers\Api\V1\ProjectHoursController::class, 'index'])->middleware('permission:91');
         Route::get('/operational-reports/requests', [App\Http\Controllers\Api\V1\OperationalReportController::class, 'requests'])->middleware('permission:18');

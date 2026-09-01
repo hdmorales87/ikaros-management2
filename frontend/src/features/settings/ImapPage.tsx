@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiErrorMessage, getGridRows, gridApi, GridRow, mailApi } from '../../api'
+import { apiErrorMessage, catalogApi, GridRow, imapApi, ImapRule, mailApi } from '../../api'
 import CatalogPage from '../catalogs/CatalogPage'
 
 type RuleForm = { palabra_clave: string; tipo: 'incidencia' | 'problema' | 'servicio'; impacto: string; urgencia: string; id_area: string; id_categoria: string; id_subcategoria: string; asunto_default: string }
@@ -13,17 +13,17 @@ export default function ImapPage() {
   const [rule, setRule] = useState<RuleForm>(emptyRule)
   const [editingRuleId, setEditingRuleId] = useState<number | null>(null)
   const queryClient = useQueryClient()
-  const configs = useQuery({ queryKey: ['imap'], queryFn: () => getGridRows('imap', '', {}, ['servidor', 'correo'], ['id', 'servidor', 'correo', 'puerto', 'tls', 'activo']) })
-  const rules = useQuery({ queryKey: ['imap-rules', imapId], queryFn: () => getGridRows('imap_reglas', '', { id_imap: imapId }, ['palabra_clave', 'tipo', 'asunto_default'], ['id', 'palabra_clave', 'tipo', 'impacto', 'urgencia', 'id_area', 'id_categoria', 'id_subcategoria', 'asunto_default']), enabled: imapId > 0 })
+  const configs = useQuery({ queryKey: ['v1-imap-accounts'], queryFn: () => catalogApi.list('imap-accounts') })
+  const rules = useQuery({ queryKey: ['v1-imap-rules', imapId], queryFn: () => imapApi.rules(imapId), enabled: imapId > 0 })
   const saveRule = useMutation({
     mutationFn: () => {
       const data = { ...rule, impacto: Number(rule.impacto), urgencia: Number(rule.urgencia), id_area: Number(rule.id_area), id_categoria: Number(rule.id_categoria), id_subcategoria: Number(rule.id_subcategoria) }
-      return editingRuleId ? gridApi.update('imap_reglas', { ...data, id: editingRuleId }) : gridApi.insert('imap_reglas', { ...data, id_imap: imapId, activo: 1 })
+      return editingRuleId ? imapApi.updateRule(imapId, editingRuleId, data) : imapApi.createRule(imapId, data)
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['imap-rules', imapId] }); setRule(emptyRule); setEditingRuleId(null); setMessage('Regla IMAP guardada.') },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['v1-imap-rules', imapId] }); setRule(emptyRule); setEditingRuleId(null); setMessage('Regla IMAP guardada.') },
     onError: (error) => setMessage(apiErrorMessage(error, 'No fue posible guardar la regla IMAP.')),
   })
-  const deactivateRule = useMutation({ mutationFn: (id: number) => gridApi.deactivate('imap_reglas', id), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['imap-rules', imapId] }); setMessage('Regla IMAP desactivada.') }, onError: (error) => setMessage(apiErrorMessage(error, 'No fue posible desactivar la regla.')) })
+  const deactivateRule = useMutation({ mutationFn: (id: number) => imapApi.deactivateRule(imapId, id), onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['v1-imap-rules', imapId] }); setMessage('Regla IMAP desactivada.') }, onError: (error) => setMessage(apiErrorMessage(error, 'No fue posible desactivar la regla.')) })
 
   async function testConnection() {
     setTesting(true)
@@ -40,7 +40,7 @@ export default function ImapPage() {
 
   function selectAccount(id: number) { setImapId(id); setEditingRuleId(null); setRule(emptyRule); setMessage('') }
   function submitRule(event: FormEvent) { event.preventDefault(); saveRule.mutate() }
-  function editRule(row: GridRow) { setEditingRuleId(Number(row.id)); setRule({ palabra_clave: String(row.palabra_clave ?? ''), tipo: String(row.tipo ?? 'incidencia') as RuleForm['tipo'], impacto: String(row.impacto ?? ''), urgencia: String(row.urgencia ?? ''), id_area: String(row.id_area ?? ''), id_categoria: String(row.id_categoria ?? ''), id_subcategoria: String(row.id_subcategoria ?? ''), asunto_default: String(row.asunto_default ?? '') }); setMessage('') }
+  function editRule(row: ImapRule) { setEditingRuleId(row.id); setRule({ palabra_clave: row.palabra_clave, tipo: row.tipo, impacto: String(row.impacto), urgencia: String(row.urgencia), id_area: String(row.id_area), id_categoria: String(row.id_categoria), id_subcategoria: String(row.id_subcategoria), asunto_default: row.asunto_default }); setMessage('') }
   function setRuleField(field: keyof RuleForm, value: string) { setRule((current) => ({ ...current, [field]: value })) }
 
   return <section>

@@ -149,6 +149,15 @@ paths:
         '422':
           description: Datos inválidos.
 
+  /v1/assets/form-options:
+    get:
+      tags: [Assets]
+      summary: Obtiene las opciones activas requeridas por el formulario de activos.
+      description: Devuelve tipos, departamentos, proveedores, estados y usuarios asignables con sus campos mínimos de identificación.
+      responses:
+        '200':
+          description: Opciones disponibles para el formulario.
+
   /v1/incidents:
     get:
       tags: [Incidents]
@@ -175,6 +184,37 @@ paths:
         '422':
           description: Parámetros de consulta inválidos o campo de ordenamiento no permitido.
 
+  /v1/incidents/{incident}:
+    get:
+      tags: [Incidents]
+      summary: Obtiene el detalle de una incidencia activa.
+      responses:
+        '200': { description: Incidencia encontrada. }
+        '404': { description: Incidencia no encontrada. }
+
+  /v1/incidents/{incident}/followups:
+    get:
+      tags: [Incidents]
+      summary: Lista la trazabilidad de una incidencia de forma descendente por fecha.
+      responses:
+        '200': { description: Seguimientos de la incidencia. }
+
+  /v1/incidents/{incident}/assignments:
+    post:
+      tags: [Incidents]
+      summary: Asigna automáticamente una incidencia a un técnico con capacidad disponible.
+      responses:
+        '200': { description: Resultado de la asignación. }
+        '403': { description: El usuario no tiene permiso para asignar incidencias. }
+
+  /v1/incidents/{incident}/start-processing:
+    post:
+      tags: [Incidents]
+      summary: Inicia el procesamiento de una incidencia y calcula su vencimiento SLA.
+      responses:
+        '200': { description: Incidencia puesta en proceso. }
+        '422': { description: No fue posible calcular el SLA. }
+
   /v1/problems:
     get:
       tags: [Problems]
@@ -184,6 +224,20 @@ paths:
         '200': { description: Página de problemas. }
         '403': { description: El usuario no tiene permiso para consultar problemas. }
 
+  /v1/problems/{problem}/assignments:
+    post:
+      tags: [Problems]
+      summary: Asigna automáticamente un problema.
+      responses:
+        '200': { description: Resultado de la asignación. }
+
+  /v1/problems/{problem}/start-processing:
+    post:
+      tags: [Problems]
+      summary: Inicia el procesamiento de un problema y calcula su vencimiento SLA.
+      responses:
+        '200': { description: Problema puesto en proceso. }
+
   /v1/services:
     get:
       tags: [Services]
@@ -192,6 +246,550 @@ paths:
       responses:
         '200': { description: Página de solicitudes de servicio. }
         '403': { description: El usuario no tiene permiso para consultar servicios. }
+
+  /v1/services/{service}:
+    get:
+      tags: [Services]
+      summary: Obtiene el detalle de una solicitud de servicio activa.
+      responses:
+        '200': { description: Solicitud encontrada. }
+        '404': { description: Solicitud no encontrada. }
+
+  /v1/services/{service}/followups:
+    get:
+      tags: [Services]
+      summary: Lista la trazabilidad de una solicitud de servicio de forma descendente por fecha.
+      responses:
+        '200': { description: Seguimientos de la solicitud. }
+
+  /v1/services/{service}/assignments:
+    post:
+      tags: [Services]
+      summary: Asigna automáticamente una solicitud de servicio.
+      responses:
+        '200': { description: Resultado de la asignación. }
+
+  /v1/services/{service}/start-processing:
+    post:
+      tags: [Services]
+      summary: Inicia el procesamiento de una solicitud de servicio y calcula su vencimiento SLA.
+      responses:
+        '200': { description: Solicitud puesta en proceso. }
+
+  /v1/clients:
+    get:
+      tags: [Clients]
+      summary: Lista los clientes activos de la empresa autenticada.
+      description: Requiere el permiso de Clientes. Permite page, per_page, search y sort; los campos ordenables son id, documento, razon_social, email y puntaje_cliente.
+      responses:
+        '200': { description: Página de clientes. }
+        '403': { description: El usuario no tiene permiso para consultar clientes. }
+
+  /v1/providers:
+    get:
+      tags: [Providers]
+      summary: Lista los proveedores activos de la empresa autenticada.
+      description: Requiere el permiso de Proveedores. Permite page, per_page, search y sort; los campos ordenables son id, documento, razon_social, email y puntaje_proveedor.
+      responses:
+        '200': { description: Página de proveedores. }
+        '403': { description: El usuario no tiene permiso para consultar proveedores. }
+
+  /v1/dashboard/summary:
+    get:
+      tags: [Dashboard]
+      summary: Obtiene los conteos operativos de la empresa autenticada.
+      responses:
+        '200': { description: Conteos activos de incidencias, servicios, activos, proyectos y capacitaciones. }
+  /v1/contract-notifications:
+    get:
+      tags: [Contracts]
+      summary: Lista notificaciones activas de contratos de la empresa autenticada.
+      description: Cada elemento incluye el nombre y tipo del contrato asociado; no expone tablas ni requiere combinaciones de datos en el cliente.
+      responses:
+        '200': { description: Notificaciones de vencimiento, renovación y pagos de contratos activos. }
+  /v1/clients/{client}/contract-form-options:
+    get:
+      tags: [Contracts]
+      summary: Obtiene el tercero y catálogos permitidos para su formulario de contratos.
+      parameters:
+        - in: path
+          name: client
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Tercero, monedas, estados, planes de pago y usuarios activos. }
+        '404': { description: Cliente no encontrado o no corresponde al tipo solicitado. }
+  /v1/providers/{provider}/contract-form-options:
+    get:
+      tags: [Contracts]
+      summary: Obtiene el tercero y catálogos permitidos para su formulario de contratos.
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Tercero, monedas, estados, planes de pago y usuarios activos. }
+        '404': { description: Proveedor no encontrado o no corresponde al tipo solicitado. }
+  /v1/clients/{client}/contracts:
+    get:
+      tags: [Contracts]
+      summary: Lista los contratos activos de un cliente de la empresa autenticada.
+      parameters:
+        - in: path
+          name: client
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - in: query
+          name: search
+          schema: { type: string, maxLength: 100 }
+        - in: query
+          name: sort
+          description: Campos permitidos separados por comas; el prefijo `-` indica orden descendente.
+          schema: { type: string, example: -fecha_vencimiento,nombre }
+      responses:
+        '200': { description: Página de contratos. }
+        '404': { description: Cliente no encontrado o no corresponde al tipo solicitado. }
+    post:
+      tags: [Contracts]
+      summary: Crea un contrato para un cliente.
+      parameters:
+        - in: path
+          name: client
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre: { type: string, maxLength: 255 }
+                fecha_inicio: { type: string, format: date, nullable: true }
+                fecha_vencimiento: { type: string, format: date, nullable: true }
+      responses:
+        '201': { description: Contrato creado. }
+        '404': { description: Cliente no encontrado o no corresponde al tipo solicitado. }
+  /v1/providers/{provider}/contracts:
+    get:
+      tags: [Contracts]
+      summary: Lista los contratos activos de un proveedor de la empresa autenticada.
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - in: query
+          name: search
+          schema: { type: string, maxLength: 100 }
+        - in: query
+          name: sort
+          description: Campos permitidos separados por comas; el prefijo `-` indica orden descendente.
+          schema: { type: string, example: -fecha_vencimiento,nombre }
+      responses:
+        '200': { description: Página de contratos. }
+        '404': { description: Proveedor no encontrado o no corresponde al tipo solicitado. }
+    post:
+      tags: [Contracts]
+      summary: Crea un contrato para un proveedor.
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre: { type: string, maxLength: 255 }
+                fecha_inicio: { type: string, format: date, nullable: true }
+                fecha_vencimiento: { type: string, format: date, nullable: true }
+      responses:
+        '201': { description: Contrato creado. }
+        '404': { description: Proveedor no encontrado o no corresponde al tipo solicitado. }
+  /v1/clients/{client}/contracts/{contract}:
+    put:
+      tags: [Contracts]
+      summary: Actualiza un contrato que pertenece al cliente indicado.
+      parameters:
+        - in: path
+          name: client
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Contrato actualizado. }
+        '404': { description: Contrato no encontrado o no pertenece al cliente. }
+    delete:
+      tags: [Contracts]
+      summary: Desactiva un contrato que pertenece al cliente indicado.
+      parameters:
+        - in: path
+          name: client
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Contrato desactivado. }
+        '404': { description: Contrato no encontrado o no pertenece al cliente. }
+  /v1/providers/{provider}/contracts/{contract}:
+    put:
+      tags: [Contracts]
+      summary: Actualiza un contrato que pertenece al proveedor indicado.
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Contrato actualizado. }
+        '404': { description: Contrato no encontrado o no pertenece al proveedor. }
+    delete:
+      tags: [Contracts]
+      summary: Desactiva un contrato que pertenece al proveedor indicado.
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Contrato desactivado. }
+        '404': { description: Contrato no encontrado o no pertenece al proveedor. }
+  /v1/clients/{client}/contracts/{contract}/payments:
+    get:
+      tags: [Contracts]
+      summary: Lista los pagos activos de un contrato de cliente.
+      parameters:
+        - in: path
+          name: client
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Pagos del contrato. }
+        '404': { description: Contrato no encontrado o no pertenece al cliente. }
+    post:
+      tags: [Contracts]
+      summary: Registra un pago en un contrato de cliente.
+      parameters:
+        - in: path
+          name: client
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                numero_factura: { type: string, nullable: true }
+                fecha_factura: { type: string, format: date, nullable: true }
+                valor: { type: number, minimum: 0, nullable: true }
+      responses:
+        '201': { description: Pago registrado con el usuario autenticado. }
+  /v1/clients/{client}/contracts/{contract}/payments/{payment}:
+    delete:
+      tags: [Contracts]
+      summary: Desactiva un pago que pertenece al contrato de cliente indicado.
+      parameters:
+        - in: path
+          name: client
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: payment
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Pago desactivado. }
+        '404': { description: Pago no encontrado o no pertenece al contrato. }
+  /v1/clients/{client}/contracts/{contract}/attachments:
+    get:
+      tags: [Contracts]
+      summary: Lista los adjuntos que pertenecen al contrato de cliente indicado.
+      parameters:
+        - in: path
+          name: client
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Adjuntos del contrato. }
+        '404': { description: Contrato no encontrado o no pertenece al cliente. }
+    post:
+      tags: [Contracts]
+      summary: Carga un adjunto en el contrato de cliente indicado.
+      parameters:
+        - in: path
+          name: client
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '201': { description: Adjunto cargado y asociado al usuario autenticado. }
+  /v1/clients/{client}/contracts/{contract}/attachments/{attachment}/download:
+    get:
+      tags: [Contracts]
+      summary: Descarga un adjunto que pertenece al contrato de cliente indicado.
+      parameters:
+        - in: path
+          name: client
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: attachment
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Archivo binario. }
+        '404': { description: Adjunto no encontrado o no pertenece al contrato. }
+  /v1/providers/{provider}/contracts/{contract}/attachments:
+    get:
+      tags: [Contracts]
+      summary: Lista los adjuntos que pertenecen al contrato de proveedor indicado.
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Adjuntos del contrato. }
+        '404': { description: Contrato no encontrado o no pertenece al proveedor. }
+    post:
+      tags: [Contracts]
+      summary: Carga un adjunto en el contrato de proveedor indicado.
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '201': { description: Adjunto cargado y asociado al usuario autenticado. }
+  /v1/providers/{provider}/contracts/{contract}/attachments/{attachment}/download:
+    get:
+      tags: [Contracts]
+      summary: Descarga un adjunto que pertenece al contrato de proveedor indicado.
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: attachment
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Archivo binario. }
+        '404': { description: Adjunto no encontrado o no pertenece al contrato. }
+  /v1/providers/{provider}/contracts/{contract}/payments:
+    get:
+      tags: [Contracts]
+      summary: Lista los pagos activos de un contrato de proveedor.
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Pagos del contrato. }
+        '404': { description: Contrato no encontrado o no pertenece al proveedor. }
+    post:
+      tags: [Contracts]
+      summary: Registra un pago en un contrato de proveedor.
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '201': { description: Pago registrado con el usuario autenticado. }
+  /v1/providers/{provider}/contracts/{contract}/payments/{payment}:
+    delete:
+      tags: [Contracts]
+      summary: Desactiva un pago que pertenece al contrato de proveedor indicado.
+      parameters:
+        - in: path
+          name: provider
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: contract
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - in: path
+          name: payment
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Pago desactivado. }
+        '404': { description: Pago no encontrado o no pertenece al contrato. }
+  /v1/projects:
+    get:
+      tags: [Projects]
+      summary: Lista los proyectos activos de la empresa autenticada.
+      description: Requiere el permiso de Proyectos. Permite page, per_page, search y sort; los campos ordenables son id, codigo, nombre, estado, fecha_inicio y fecha_final.
+      responses:
+        '200': { description: Página de proyectos. }
+        '403': { description: El usuario no tiene permiso para consultar proyectos. }
+        '422': { description: Parámetros de consulta inválidos o campo de ordenamiento no permitido. }
+
+  /v1/projects/{project}:
+    put:
+      tags: [Projects]
+      summary: Actualiza la información básica y periodo de un proyecto activo.
+      description: Requiere el permiso de Proyectos. No permite que el nuevo periodo deje actividades fuera de su rango.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre: { type: string, maxLength: 255 }
+                fecha_inicio: { type: string, format: date }
+                fecha_final: { type: string, format: date }
+      responses:
+        '200': { description: Proyecto actualizado. }
+        '404': { description: Proyecto no encontrado. }
+        '422': { description: Datos inválidos o periodo incompatible con las actividades. }
+
+  /v1/projects/{project}/activities:
+    get:
+      tags: [Projects]
+      summary: Lista las actividades activas de un proyecto.
+      responses:
+        '200': { description: Actividades del proyecto. }
+        '404': { description: Proyecto no encontrado. }
+    post:
+      tags: [Projects]
+      summary: Crea una actividad dentro del periodo de un proyecto activo.
+      description: Requiere el permiso de Proyectos. La fecha y hora final no pueden ser anteriores a las iniciales.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre, descripcion, fecha_inicio, hora_inicio, fecha_final, hora_final]
+      responses:
+        '201': { description: Actividad creada. }
+        '404': { description: Proyecto no encontrado. }
+        '422': { description: Datos inválidos o actividad fuera del periodo del proyecto. }
+
+  /v1/projects/{project}/risks:
+    get:
+      tags: [Projects]
+      summary: Lista los riesgos activos de un proyecto.
+      responses:
+        '200': { description: Riesgos del proyecto. }
+        '404': { description: Proyecto no encontrado. }
+    post:
+      tags: [Projects]
+      summary: Registra un riesgo en un proyecto activo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre: { type: string, maxLength: 255 }
+      responses:
+        '201': { description: Riesgo creado. }
+        '404': { description: Proyecto no encontrado. }
 
   /checkCompany:
     post:

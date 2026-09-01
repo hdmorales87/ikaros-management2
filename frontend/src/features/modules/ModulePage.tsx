@@ -58,9 +58,9 @@ export default function ModulePage({ definition }: { definition: ModuleDefinitio
   if (definition.path === 'config/dias-festivos') return <CatalogPage resource="holidays" title={definition.title} description={definition.description} fields={['fecha', 'descripcion']} />
   if (definition.path === 'config/riesgos/probabilidad') return <CatalogPage resource="risk-probabilities" title={definition.title} description={definition.description} fields={['nombre']} />
   if (definition.path === 'config/riesgos/impacto') return <CatalogPage resource="risk-impacts" title={definition.title} description={definition.description} fields={['nombre']} />
-  if (definition.path === 'incidencias') return <RequestBoardPage table="incidencias" type="incidencia" title={definition.title} />
-  if (definition.path === 'problemas') return <RequestBoardPage table="incidencias" type="problema" title={definition.title} filter={{ problema: true }} />
-  if (definition.path === 'servicios') return <RequestBoardPage table="servicios" type="servicio" title={definition.title} />
+  if (definition.path === 'incidencias') return <RequestBoardPage type="incidencia" title={definition.title} />
+  if (definition.path === 'problemas') return <RequestBoardPage type="problema" title={definition.title} />
+  if (definition.path === 'servicios') return <RequestBoardPage type="servicio" title={definition.title} />
   if (definition.path === 'proyectos/actividades') return <ActivitiesPage />
   if (definition.path === 'proyectos/gantt') return <GanttPage />
   if (definition.path === 'reportes') return <ReportsPage />
