@@ -138,6 +138,8 @@ export type Training = { id: number; nombre: string; instructor: string | null; 
 export type TrainingAttendee = { id: number; id_usuario: number; asistencia: string | boolean }
 export type InitiativeApprovalTrace = { id: number; comite: string; nombre_usuario: string; apellido_usuario: string; estado_validacion: number }
 export type Initiative = { id: number; codigo: string | null; nomenclatura: string; nombre: string; id_departamento: number; id_propietario: number; fecha_inicio: string; hora_inicio: string; fecha_final: string; hora_final: string; presupuesto: number; tiempo: number; descripcion: string; beneficios_cualitativos: string; beneficios_cuantitativos: string; escenario_pesimista: string; escenario_optimista: string; estado: number }
+export type InitiativeCommittee = { id: number; id_iniciativa: number; nombre: string; descripcion: string; orden: number; estado_validacion: number }
+export type InitiativeApprover = { id: number; id_user: number; estado_validacion: number }
 export type OperationalReportRow = { id: number; asunto: string | null; estado: number | null; prioridad: number | null; fecha: string | null; tipo: 'Incidencia' | 'Problema' | 'Servicio' }
 export type RoleManagementData = { roles: { id: number; nombre: string }[]; permissions: { id: number; nombre: string; descripcion: string | null }[] }
 export type Project = { id: number; codigo: string | null; nombre: string; estado: number | null; fecha_inicio: string | null; fecha_final: string | null }
@@ -332,6 +334,7 @@ export const roleManagementApi = {
 }
 
 export const projectApi = {
+  allActivities: () => api.get<GridRow[]>('/v1/project-activities').then(({ data }) => data),
   list: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<Project>>('/v1/projects', { params }).then(({ data }) => data),
   update: (id: number, payload: Pick<Project, 'nombre' | 'fecha_inicio' | 'fecha_final'>) => api.put<Project>(`/v1/projects/${id}`, payload).then(({ data }) => data),
   activities: (id: number) => api.get<GridRow[]>(`/v1/projects/${id}/activities`).then(({ data }) => data),
@@ -347,6 +350,14 @@ export const initiativeApi = {
   status: (id: number, uuid: string) => api.get('/getEstadoSolicitudValidacion', { params: { id }, headers: { 'X-UUID': uuid } }).then(({ data }) => data),
   saveValidation: (id: number, data: Record<string, unknown>, uuid: string) => api.post('/guardarValidacionIniciativa', { id, data }, { headers: { 'X-UUID': uuid } }).then(({ data: response }) => response),
   saveFollowup: (data: Record<string, unknown>, uuid: string) => api.post('/guardarValidacionIniciativaSeguimiento', { data }, { headers: { 'X-UUID': uuid } }).then(({ data: response }) => response),
+}
+
+export const initiativeCommitteeApi = {
+  list: () => api.get<InitiativeCommittee[]>('/v1/initiative-committees').then(({ data }) => data),
+  create: (payload: Omit<InitiativeCommittee, 'id' | 'estado_validacion'>) => api.post<InitiativeCommittee>('/v1/initiative-committees', payload).then(({ data }) => data),
+  approvers: (id: number) => api.get<InitiativeApprover[]>(`/v1/initiative-committees/${id}/approvers`).then(({ data }) => data),
+  addApprover: (id: number, userId: number) => api.post<InitiativeApprover>(`/v1/initiative-committees/${id}/approvers`, { id_user: userId }).then(({ data }) => data),
+  removeApprover: (id: number, approverId: number) => api.delete(`/v1/initiative-committees/${id}/approvers/${approverId}`).then(({ data }) => data),
 }
 
 export const policyApi = {

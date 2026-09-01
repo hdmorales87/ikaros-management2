@@ -79,6 +79,11 @@ class ProjectController extends Controller
             : response()->json(['message' => 'Proyecto no encontrado.'], 404);
     }
 
+    public function allActivities(Request $request): JsonResponse
+    {
+        return response()->json($this->projectService->allActivities((string) $request->header('x-uuid', '')));
+    }
+
     public function risks(Request $request, int $project): JsonResponse
     {
         $result = $this->projectService->risks($project, (string) $request->header('x-uuid', ''));

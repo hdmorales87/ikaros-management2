@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getGridRows, gridApi, GridRow } from '../../api'
+import { gridApi, GridRow, projectApi } from '../../api'
 import AttachmentPanel from '../files/AttachmentPanel'
 
 type SubactivityForm = { nombre: string; descripcion: string; fechaInicio: string; fechaFinal: string; horaInicio: string; horaFinal: string }
@@ -13,7 +13,7 @@ export default function ActivitiesPage() {
   const [form, setForm] = useState<SubactivityForm>(emptyForm)
   const [editing, setEditing] = useState<GridRow | null>(null)
   const [message, setMessage] = useState('')
-  const activities = useQuery({ queryKey: ['all-activities'], queryFn: () => getGridRows('proyectos_actividades', '', {}, ['nombre']) })
+  const activities = useQuery({ queryKey: ['v1-all-activities'], queryFn: projectApi.allActivities })
   const users = useQuery({ queryKey: ['activity-users'], queryFn: () => getGridRows('users', '', { activo: true }, ['nombre', 'apellido']) })
   const subactivities = useQuery({ queryKey: ['subactivities', activityId], queryFn: () => getGridRows('proyectos_subactividades', '', { id_actividad: activityId }, ['nombre']), enabled: activityId > 0 })
   const additional = useQuery({ queryKey: ['activity-responsibles', activityId], queryFn: () => getGridRows('proyectos_actividades_responsables', '', { id_actividad: activityId, activo: true }, ['id_user']), enabled: activityId > 0 })

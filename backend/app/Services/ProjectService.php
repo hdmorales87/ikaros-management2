@@ -122,6 +122,34 @@ class ProjectService
             ->all();
     }
 
+    public function allActivities(string $uuid): array
+    {
+        return $this->connection($uuid)->table('proyectos_actividades')
+            ->select(['id', 'id_proyecto', 'nombre', 'descripcion', 'fecha_inicio', 'hora_inicio', 'fecha_final', 'hora_final', 'id_responsable', 'estado'])
+            ->where('activo', 1)
+            ->orderBy('fecha_inicio')
+            ->get()
+            ->map(fn ($activity) => (array) $activity)
+            ->all();
+    }
+
+    public function subactivities(int $activityId, string $uuid): ?array
+    {
+        $connection = $this->connection($uuid);
+        if (!$connection->table('proyectos_actividades')->where('id', $activityId)->where('activo', 1)->exists()) {
+            return null;
+        }
+
+        return $connection->table('proyectos_subactividades')
+            ->select(['id', 'nombre', 'descripcion', 'fecha_inicio', 'hora_inicio', 'fecha_final', 'hora_final', 'estado'])
+            ->where('id_actividad', $activityId)
+            ->where('activo', 1)
+            ->orderBy('fecha_inicio')
+            ->get()
+            ->map(fn ($subactivity) => (array) $subactivity)
+            ->all();
+    }
+
     public function risks(int $projectId, string $uuid): ?array
     {
         $connection = $this->connection($uuid);

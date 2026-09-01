@@ -95,6 +95,12 @@ Route::middleware(['security.headers', 'authenticate.jwt'])->group(function () {
         Route::get('/initiatives', [App\Http\Controllers\Api\V1\InitiativeController::class, 'index']);
         Route::post('/initiatives', [App\Http\Controllers\Api\V1\InitiativeController::class, 'store']);
         Route::put('/initiatives/{initiative}', [App\Http\Controllers\Api\V1\InitiativeController::class, 'update']);
+        Route::get('/project-activities', [App\Http\Controllers\Api\V1\ProjectController::class, 'allActivities']);
+        Route::get('/initiative-committees', [App\Http\Controllers\Api\V1\InitiativeCommitteeController::class, 'index']);
+        Route::post('/initiative-committees', [App\Http\Controllers\Api\V1\InitiativeCommitteeController::class, 'store']);
+        Route::get('/initiative-committees/{committee}/approvers', [App\Http\Controllers\Api\V1\InitiativeCommitteeController::class, 'approvers']);
+        Route::post('/initiative-committees/{committee}/approvers', [App\Http\Controllers\Api\V1\InitiativeCommitteeController::class, 'addApprover']);
+        Route::delete('/initiative-committees/{committee}/approvers/{approver}', [App\Http\Controllers\Api\V1\InitiativeCommitteeController::class, 'removeApprover']);
         Route::get('/role-management', [App\Http\Controllers\RoleController::class, 'managementData'])->middleware('permission:32');
         Route::get('/project-hours', [App\Http\Controllers\Api\V1\ProjectHoursController::class, 'index'])->middleware('permission:91');
         Route::get('/operational-reports/requests', [App\Http\Controllers\Api\V1\OperationalReportController::class, 'requests'])->middleware('permission:18');
