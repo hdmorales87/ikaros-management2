@@ -136,6 +136,8 @@ export type Location = { id: number; id_departamento: number; nombre: string }
 export type ImapRule = { id: number; palabra_clave: string; tipo: 'incidencia' | 'problema' | 'servicio'; impacto: number; urgencia: number; id_area: number; id_categoria: number; id_subcategoria: number; asunto_default: string }
 export type Training = { id: number; nombre: string; instructor: string | null; intensidad: number | null; fecha_inicio: string | null; hora_inicio: string | null; fecha_final: string | null; hora_final: string | null; lugar: string | null; observaciones: string | null }
 export type TrainingAttendee = { id: number; id_usuario: number; asistencia: string | boolean }
+export type InitiativeApprovalTrace = { id: number; comite: string; nombre_usuario: string; apellido_usuario: string; estado_validacion: number }
+export type Initiative = { id: number; codigo: string | null; nomenclatura: string; nombre: string; id_departamento: number; id_propietario: number; fecha_inicio: string; hora_inicio: string; fecha_final: string; hora_final: string; presupuesto: number; tiempo: number; descripcion: string; beneficios_cualitativos: string; beneficios_cuantitativos: string; escenario_pesimista: string; escenario_optimista: string; estado: number }
 export type OperationalReportRow = { id: number; asunto: string | null; estado: number | null; prioridad: number | null; fecha: string | null; tipo: 'Incidencia' | 'Problema' | 'Servicio' }
 export type RoleManagementData = { roles: { id: number; nombre: string }[]; permissions: { id: number; nombre: string; descripcion: string | null }[] }
 export type Project = { id: number; codigo: string | null; nombre: string; estado: number | null; fecha_inicio: string | null; fecha_final: string | null }
@@ -317,6 +319,10 @@ export const trainingApi = {
   removeAttendee: (id: number, attendeeId: number) => api.delete(`/v1/trainings/${id}/attendees/${attendeeId}`).then(({ data }) => data),
 }
 
+export const initiativeApprovalApi = {
+  trace: () => api.get<InitiativeApprovalTrace[]>('/v1/initiative-approvals').then(({ data }) => data),
+}
+
 export const operationalReportApi = {
   requests: () => api.get<OperationalReportRow[]>('/v1/operational-reports/requests').then(({ data }) => data),
 }
@@ -335,6 +341,9 @@ export const projectApi = {
 }
 
 export const initiativeApi = {
+  list: () => api.get<Initiative[]>('/v1/initiatives').then(({ data }) => data),
+  create: (payload: Omit<Initiative, 'id' | 'codigo' | 'estado'>) => api.post<Initiative>('/v1/initiatives', payload).then(({ data }) => data),
+  update: (id: number, payload: Omit<Initiative, 'id' | 'codigo' | 'estado'>) => api.put<Initiative>(`/v1/initiatives/${id}`, payload).then(({ data }) => data),
   status: (id: number, uuid: string) => api.get('/getEstadoSolicitudValidacion', { params: { id }, headers: { 'X-UUID': uuid } }).then(({ data }) => data),
   saveValidation: (id: number, data: Record<string, unknown>, uuid: string) => api.post('/guardarValidacionIniciativa', { id, data }, { headers: { 'X-UUID': uuid } }).then(({ data: response }) => response),
   saveFollowup: (data: Record<string, unknown>, uuid: string) => api.post('/guardarValidacionIniciativaSeguimiento', { data }, { headers: { 'X-UUID': uuid } }).then(({ data: response }) => response),
