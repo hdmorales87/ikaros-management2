@@ -39,6 +39,11 @@ class ActivoController extends Controller
             : response()->json(['message' => 'Activo no encontrado.'], 404);
     }
 
+    public function formOptions(Request $request): JsonResponse
+    {
+        return response()->json($this->activoService->formOptions((string) $request->header('x-uuid', '')));
+    }
+
     public function update(Request $request, int $asset): JsonResponse
     {
         $data = $request->validate([

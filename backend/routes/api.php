@@ -69,11 +69,24 @@ Route::middleware(['security.headers', 'authenticate.jwt'])->group(function () {
     Route::post('/importExcelDatabase', [App\Http\Controllers\FileManagerController::class, 'importExcelDatabase']);
     Route::prefix('v1')->group(function () {
         Route::get('/assets', [App\Http\Controllers\Api\V1\ActivoController::class, 'index'])->middleware('permission:11');
+        Route::get('/assets/form-options', [App\Http\Controllers\Api\V1\ActivoController::class, 'formOptions'])->middleware('permission:11');
         Route::get('/assets/{asset}', [App\Http\Controllers\Api\V1\ActivoController::class, 'show'])->middleware('permission:11');
         Route::put('/assets/{asset}', [App\Http\Controllers\Api\V1\ActivoController::class, 'update'])->middleware('permission:11');
         Route::get('/incidents', [App\Http\Controllers\SolicitudController::class, 'indexIncidents'])->middleware('permission:2');
+        Route::get('/incidents/{incident}', [App\Http\Controllers\SolicitudController::class, 'showIncident'])->middleware('permission:2');
+        Route::get('/incidents/{incident}/followups', [App\Http\Controllers\SolicitudController::class, 'incidentFollowups'])->middleware('permission:2');
+        Route::post('/incidents/{incident}/assignments', [App\Http\Controllers\SolicitudController::class, 'assignIncident'])->middleware('permission:2');
+        Route::post('/incidents/{incident}/start-processing', [App\Http\Controllers\SolicitudController::class, 'startIncident'])->middleware('permission:2');
         Route::get('/problems', [App\Http\Controllers\SolicitudController::class, 'indexProblems'])->middleware('permission:5');
+        Route::post('/problems/{problem}/assignments', [App\Http\Controllers\SolicitudController::class, 'assignProblem'])->middleware('permission:5');
+        Route::post('/problems/{problem}/start-processing', [App\Http\Controllers\SolicitudController::class, 'startProblem'])->middleware('permission:5');
         Route::get('/services', [App\Http\Controllers\SolicitudController::class, 'indexServices'])->middleware('permission:7');
+        Route::get('/services/{service}', [App\Http\Controllers\SolicitudController::class, 'showService'])->middleware('permission:7');
+        Route::get('/services/{service}/followups', [App\Http\Controllers\SolicitudController::class, 'serviceFollowups'])->middleware('permission:7');
+        Route::post('/services/{service}/assignments', [App\Http\Controllers\SolicitudController::class, 'assignService'])->middleware('permission:7');
+        Route::post('/services/{service}/start-processing', [App\Http\Controllers\SolicitudController::class, 'startService'])->middleware('permission:7');
+        Route::get('/clients', [App\Http\Controllers\TerceroController::class, 'indexClients'])->middleware('permission:62');
+        Route::get('/providers', [App\Http\Controllers\TerceroController::class, 'indexProviders'])->middleware('permission:14');
     });
     Route::post('/getDataGrid', [App\Http\Controllers\DataGridController::class, 'getData']);
     Route::post('/dataGrid', [App\Http\Controllers\DataGridController::class, 'insertData']);

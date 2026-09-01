@@ -7,6 +7,16 @@ use Illuminate\Database\Connection;
 
 class TerceroService
 {
+    public function paginateClients(string $uuid, string $search, int $perPage, string $sort): array
+    {
+        return $this->paginate($uuid, 'cliente', $search, $perPage, $sort);
+    }
+
+    public function paginateProviders(string $uuid, string $search, int $perPage, string $sort): array
+    {
+        return $this->paginate($uuid, 'proveedor', $search, $perPage, $sort);
+    }
+
     public function survey(int $lastId, int $thirdPartyId, string $uuid): array
     {
         return $this->connection($uuid)->table('encuesta_terceros')
@@ -63,6 +73,54 @@ class TerceroService
         $lastId = (int) ($connection->table('encuesta_terceros')->where('id_tercero', $thirdPartyId)->where('tipo', 'cliente')->max('id') ?? 0);
         $link = rtrim($appUrl, '/').'/encuestaCliente/'.base64_encode((string) $lastId).'/'.base64_encode((string) $thirdPartyId).'/'.base64_encode($uuid);
         return ['email' => $thirdParty->email, 'name' => $thirdParty->nombre_contacto, 'company' => $thirdParty->razon_social, 'link' => $link];
+    }
+
+    private function paginate(string $uuid, string $type, string $search, int $perPage, string $sort): array
+    {
+        $scoreColumn = 'puntaje_'.$type;
+        $query = $this->connection($uuid)->table('terceros')
+            ->select(['id', 'documento', 'razon_social', 'nombre_comercial', 'email', $scoreColumn])
+            ->where('activo', 1)
+            ->where($type, 'true');
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search): void {
+                $builder->where('documento', 'like', '%'.$search.'%')
+                    ->orWhere('razon_social', 'like', '%'.$search.'%')
+                    ->orWhere('nombre_comercial', 'like', '%'.$search.'%')
+                    ->orWhere('email', 'like', '%'.$search.'%');
+            });
+        }
+
+        $this->applySort($query, $sort, $scoreColumn);
+        $paginator = $query->paginate($perPage);
+
+        return [
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+            ],
+        ];
+    }
+
+    private function applySort($query, string $sort, string $scoreColumn): void
+    {
+        $allowed = ['id', 'documento', 'razon_social', 'email', $scoreColumn];
+        $applied = false;
+
+        foreach (array_filter(explode(',', $sort)) as $requested) {
+            $column = ltrim($requested, '-');
+            abort_unless(in_array($column, $allowed, true), 422, 'Campo de ordenamiento no permitido.');
+            $query->orderBy($column, str_starts_with($requested, '-') ? 'desc' : 'asc');
+            $applied = true;
+        }
+
+        if (!$applied) {
+            $query->orderBy('razon_social');
+        }
     }
 
     private function connection(string $uuid): Connection

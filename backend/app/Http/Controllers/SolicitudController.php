@@ -32,6 +32,56 @@ class SolicitudController extends Controller
         return $this->paginatedRequests($request, 'servicio');
     }
 
+    public function showIncident(Request $request, int $incident): JsonResponse
+    {
+        return $this->requestDetail($this->solicitudService->findIncident($incident, $this->uuid($request)));
+    }
+
+    public function incidentFollowups(Request $request, int $incident): JsonResponse
+    {
+        return response()->json($this->solicitudService->incidentFollowups($incident, $this->uuid($request)));
+    }
+
+    public function showService(Request $request, int $service): JsonResponse
+    {
+        return $this->requestDetail($this->solicitudService->findService($service, $this->uuid($request)));
+    }
+
+    public function serviceFollowups(Request $request, int $service): JsonResponse
+    {
+        return response()->json($this->solicitudService->serviceFollowups($service, $this->uuid($request)));
+    }
+
+    public function assignIncident(Request $request, int $incident): JsonResponse
+    {
+        return response()->json($this->solicitudService->assign($incident, 'incidencia', $this->uuid($request)));
+    }
+
+    public function startIncident(Request $request, int $incident): JsonResponse
+    {
+        return response()->json($this->solicitudService->startProcessing($incident, 'incidencia', $this->jwtUserId($request), $this->uuid($request)));
+    }
+
+    public function assignProblem(Request $request, int $problem): JsonResponse
+    {
+        return response()->json($this->solicitudService->assign($problem, 'problema', $this->uuid($request)));
+    }
+
+    public function startProblem(Request $request, int $problem): JsonResponse
+    {
+        return response()->json($this->solicitudService->startProcessing($problem, 'problema', $this->jwtUserId($request), $this->uuid($request)));
+    }
+
+    public function assignService(Request $request, int $service): JsonResponse
+    {
+        return response()->json($this->solicitudService->assign($service, 'servicio', $this->uuid($request)));
+    }
+
+    public function startService(Request $request, int $service): JsonResponse
+    {
+        return response()->json($this->solicitudService->startProcessing($service, 'servicio', $this->jwtUserId($request), $this->uuid($request)));
+    }
+
     private function paginatedRequests(Request $request, string $type): JsonResponse
     {
         $query = $request->validate([
@@ -53,6 +103,13 @@ class SolicitudController extends Controller
             (int) ($query['per_page'] ?? 25),
             (string) ($query['sort'] ?? ''),
         ));
+    }
+
+    private function requestDetail(?array $request): JsonResponse
+    {
+        return $request
+            ? response()->json($request)
+            : response()->json(['message' => 'Solicitud no encontrada.'], 404);
     }
 
     public function getSolicitudesImpactos(Request $request): JsonResponse

@@ -97,10 +97,13 @@ export const roleApi = {
 
 export type Asset = { id: number; codigo: string | null; nombre: string; marca: string | null; activo: number; id_tipo?: number | null; id_departamento?: number | null; id_proveedor?: number | null; estado?: number | null; id_asignado?: number | null; precio_compra?: number | null; fecha_compra?: string | null; numero_factura?: string | null; id_ubicacion?: number | null }
 export type PaginatedResponse<T> = { data: T[]; meta: { current_page: number; per_page: number; total: number; last_page: number } }
+export type AssetFormOption = { id: number; nombre: string; apellido?: string | null }
+export type AssetFormOptions = { types: AssetFormOption[]; departments: AssetFormOption[]; providers: AssetFormOption[]; states: AssetFormOption[]; users: AssetFormOption[] }
 
 export const assetApi = {
   list: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<Asset>>('/v1/assets', { params }).then(({ data }) => data),
   find: (id: number) => api.get<Asset>(`/v1/assets/${id}`).then(({ data }) => data),
+  formOptions: () => api.get<AssetFormOptions>('/v1/assets/form-options').then(({ data }) => data),
   update: (id: number, payload: Partial<Asset>) => api.put<Asset>(`/v1/assets/${id}`, payload).then(({ data }) => data),
   generateCode: (idActivo: number) => api.post('/generarCodigoActivo', { idActivo }).then(({ data }) => data),
 }
@@ -121,11 +124,24 @@ export const fileApi = {
 
 export type RequestCatalog = { id: number; nombre: string }
 export type Incident = { id: number; asunto: string; estado: number; prioridad: number | null }
+export type ThirdParty = { id: number; documento: string | null; razon_social: string | null; nombre_comercial: string | null; email: string | null; puntaje_cliente?: number | null; puntaje_proveedor?: number | null }
+export type RequestDetail = Record<string, unknown> & { id: number; asunto?: string; descripcion?: string; estado?: number; prioridad?: number | null }
+export type RequestFollowup = { id: number; estado: string; observacion: string; id_usuario: number; fecha: string }
 
 export const requestApi = {
   listIncidents: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<Incident>>('/v1/incidents', { params }).then(({ data }) => data),
   listProblems: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<Incident>>('/v1/problems', { params }).then(({ data }) => data),
   listServices: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<Incident>>('/v1/services', { params }).then(({ data }) => data),
+  findIncident: (id: number) => api.get<RequestDetail>(`/v1/incidents/${id}`).then(({ data }) => data),
+  incidentFollowups: (id: number) => api.get<RequestFollowup[]>(`/v1/incidents/${id}/followups`).then(({ data }) => data),
+  findService: (id: number) => api.get<RequestDetail>(`/v1/services/${id}`).then(({ data }) => data),
+  serviceFollowups: (id: number) => api.get<RequestFollowup[]>(`/v1/services/${id}/followups`).then(({ data }) => data),
+  assignIncident: (id: number) => api.post(`/v1/incidents/${id}/assignments`).then(({ data }) => data),
+  startIncident: (id: number) => api.post(`/v1/incidents/${id}/start-processing`).then(({ data }) => data),
+  assignProblem: (id: number) => api.post(`/v1/problems/${id}/assignments`).then(({ data }) => data),
+  startProblem: (id: number) => api.post(`/v1/problems/${id}/start-processing`).then(({ data }) => data),
+  assignService: (id: number) => api.post(`/v1/services/${id}/assignments`).then(({ data }) => data),
+  startService: (id: number) => api.post(`/v1/services/${id}/start-processing`).then(({ data }) => data),
   urgencies: () => api.get<RequestCatalog[]>('/getSolicitudesUrgencias').then(({ data }) => data),
   impacts: () => api.get<RequestCatalog[]>('/getSolicitudesImpactos').then(({ data }) => data),
   areas: (module: string) => api.get<RequestCatalog[]>(`/getAreasServicioByModulo/${module}`).then(({ data }) => data),
@@ -203,6 +219,11 @@ export const notificationApi = {
   initiative: (id: number) => api.post('/notificarValidacionIniciativa', { id }).then(({ data }) => data),
   committee: (id: number, idUser: number) => api.post('/notificarComite', { id, idUser }).then(({ data }) => data),
   clientSurvey: (idCliente: number) => api.post('/linkEncuestaCliente', { idCliente }).then(({ data }) => data),
+}
+
+export const thirdPartyApi = {
+  listClients: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<ThirdParty>>('/v1/clients', { params }).then(({ data }) => data),
+  listProviders: (params: { page: number; per_page: number; search?: string; sort?: string }) => api.get<PaginatedResponse<ThirdParty>>('/v1/providers', { params }).then(({ data }) => data),
 }
 
 export const initiativeApi = {

@@ -35,6 +35,26 @@ class SolicitudService
         return $this->paginateRequests($uuid, 'servicio', $search, $perPage, $sort);
     }
 
+    public function findIncident(int $id, string $uuid): ?array
+    {
+        return $this->findRequest($uuid, 'incidencias', $id);
+    }
+
+    public function findService(int $id, string $uuid): ?array
+    {
+        return $this->findRequest($uuid, 'servicios', $id);
+    }
+
+    public function incidentFollowups(int $id, string $uuid): array
+    {
+        return $this->requestFollowups($uuid, 'incidencias_seguimientos', $id);
+    }
+
+    public function serviceFollowups(int $id, string $uuid): array
+    {
+        return $this->requestFollowups($uuid, 'servicios_seguimientos', $id);
+    }
+
     private function paginateRequests(string $uuid, string $type, string $search, int $perPage, string $sort): array
     {
         $table = match ($type) {
@@ -73,6 +93,36 @@ class SolicitudService
                 'last_page' => $paginator->lastPage(),
             ],
         ];
+    }
+
+    private function findRequest(string $uuid, string $table, int $id): ?array
+    {
+        $request = $this->connection($uuid)->table($table)
+            ->select([
+                'id', 'asunto', 'descripcion', 'estado', 'prioridad', 'fecha',
+                'urgencia', 'impacto', 'id_usuario', 'id_area', 'id_categoria',
+                'id_subcategoria', 'id_tecnico_incidencia', 'id_tecnico_problema',
+                'id_tecnico_servicio', 'fecha_asignacion_incidencia',
+                'fecha_asignacion_problema', 'fecha_asignacion_servicio',
+                'fecha_vencimiento_incidencia', 'fecha_vencimiento_problema',
+                'fecha_vencimiento_servicio', 'activo',
+            ])
+            ->where('id', $id)
+            ->where('activo', 1)
+            ->first();
+
+        return $request ? (array) $request : null;
+    }
+
+    private function requestFollowups(string $uuid, string $table, int $id): array
+    {
+        return $this->connection($uuid)->table($table)
+            ->select(['id', 'estado', 'observacion', 'id_usuario', 'fecha'])
+            ->where('id_maestro', $id)
+            ->orderByDesc('fecha')
+            ->get()
+            ->map(fn ($followup) => (array) $followup)
+            ->all();
     }
 
     public function reject(string $table, int $id, string $observation, int $userId, string $uuid): void
@@ -173,6 +223,27 @@ class SolicitudService
             report($exception);
         }
         return ['msg' => 'success', 'consec' => $id, 'idAsignado' => $best['id'], 'notified' => $notified];
+    }
+
+    public function startProcessing(int $id, string $type, int $userId, string $uuid): array
+    {
+        $table = match ($type) {
+            'incidencia', 'problema' => 'incidencias',
+            'servicio' => 'servicios',
+            default => throw new \InvalidArgumentException('Tipo de solicitud inválido.'),
+        };
+        $currentState = $this->connection($uuid)->table($table)->where('id', $id)->value('estado');
+        abort_if($currentState === null, 404, 'Solicitud no encontrada.');
+
+        return $this->manage([
+            'tabla' => $table,
+            'opcion' => $type,
+            'idRow' => $id,
+            'estado' => 2,
+            'estadoActual' => (int) $currentState,
+            'name_estado' => 'En proceso',
+            'observacion' => 'Solicitud puesta en proceso.',
+        ], $userId, $uuid);
     }
 
     private function moduleTable(string $table): string

@@ -19,6 +19,16 @@ class TerceroController extends Controller
         return response()->json($this->terceroService->survey($data['lastId'], $data['idCliente'], $this->uuid($request)));
     }
 
+    public function indexClients(Request $request): JsonResponse
+    {
+        return $this->paginatedList($request, 'cliente');
+    }
+
+    public function indexProviders(Request $request): JsonResponse
+    {
+        return $this->paginatedList($request, 'proveedor');
+    }
+
     public function getTerceroById(Request $request): JsonResponse
     {
         $data = $request->validate(['id' => ['required', 'integer']]);
@@ -54,6 +64,24 @@ class TerceroController extends Controller
         $content = '<h1>Encuesta de satisfacción</h1><p>Hola '.e($invitation['name']).'. Te invitamos a compartir tu percepción sobre '.e($invitation['company']).'.</p><p><a href="'.e($invitation['link']).'">Diligenciar encuesta</a></p>';
         $this->mailService->send($invitation['email'], 'Encuesta de satisfacción', $content, $this->uuid($request));
         return response()->json(['msg' => 'success']);
+    }
+
+    private function paginatedList(Request $request, string $type): JsonResponse
+    {
+        $query = $request->validate([
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'search' => ['nullable', 'string', 'max:100'],
+            'sort' => ['nullable', 'string', 'max:100'],
+        ]);
+        $method = $type === 'cliente' ? 'paginateClients' : 'paginateProviders';
+
+        return response()->json($this->terceroService->{$method}(
+            $this->uuid($request),
+            trim((string) ($query['search'] ?? '')),
+            (int) ($query['per_page'] ?? 25),
+            (string) ($query['sort'] ?? ''),
+        ));
     }
 
     private function uuid(Request $request): string

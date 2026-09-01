@@ -53,6 +53,31 @@ class ActivoService
         return $asset ? (array) $asset : null;
     }
 
+    public function formOptions(string $uuid): array
+    {
+        $connection = $this->connection($uuid);
+
+        return [
+            'types' => $this->activeOptions($connection, 'activos_tipos'),
+            'departments' => $this->activeOptions($connection, 'departamentos'),
+            'providers' => $connection->table('terceros')
+                ->select(['id', 'razon_social as nombre'])
+                ->where('activo', 1)
+                ->orderBy('razon_social')
+                ->get()
+                ->map(fn ($provider) => (array) $provider)
+                ->all(),
+            'states' => $this->activeOptions($connection, 'activos_estados'),
+            'users' => $connection->table('users')
+                ->select(['id', 'primer_nombre as nombre', 'primer_apellido as apellido'])
+                ->where('activo', 1)
+                ->orderBy('primer_nombre')
+                ->get()
+                ->map(fn ($user) => (array) $user)
+                ->all(),
+        ];
+    }
+
     public function update(int $assetId, array $data, string $uuid): ?array
     {
         $connection = $this->connection($uuid);
@@ -117,6 +142,17 @@ class ActivoService
         if (!$applied) {
             $query->orderByDesc('id');
         }
+    }
+
+    private function activeOptions(Connection $connection, string $table): array
+    {
+        return $connection->table($table)
+            ->select(['id', 'nombre'])
+            ->where('activo', 1)
+            ->orderBy('nombre')
+            ->get()
+            ->map(fn ($option) => (array) $option)
+            ->all();
     }
 
     private function connection(string $uuid): Connection
