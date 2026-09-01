@@ -2,7 +2,7 @@ import { FormEvent, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { UsersRound } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { getGridRows, gridApi, GridRow } from '../../api'
+import { trainingApi, Training } from '../../api'
 import AttachmentPanel from '../files/AttachmentPanel'
 
 type TrainingForm = {
@@ -22,21 +22,21 @@ const emptyForm: TrainingForm = { nombre: '', instructor: '', intensidad: '', fe
 export default function TrainingPage() {
   const queryClient = useQueryClient()
   const [form, setForm] = useState<TrainingForm>(emptyForm)
-  const [selected, setSelected] = useState<GridRow | null>(null)
+  const [selected, setSelected] = useState<Training | null>(null)
   const [message, setMessage] = useState('')
-  const trainings = useQuery({ queryKey: ['trainings'], queryFn: () => getGridRows('capacitaciones', '', {}, ['nombre', 'instructor']) })
+  const trainings = useQuery({ queryKey: ['v1-trainings'], queryFn: trainingApi.list })
   const save = useMutation({
     mutationFn: () => {
       const data = { nombre: form.nombre, instructor: form.instructor || null, intensidad: form.intensidad ? Number(form.intensidad) : null, fecha_inicio: form.fechaInicio || null, hora_inicio: form.horaInicio || null, fecha_final: form.fechaFinal || null, hora_final: form.horaFinal || null, lugar: form.lugar || null, observaciones: form.observaciones || null }
-      return selected ? gridApi.update('capacitaciones', { ...data, id: selected.id }) : gridApi.insert('capacitaciones', { ...data, activo: 1 })
+      return selected ? trainingApi.update(selected.id, data) : trainingApi.create(data)
     },
-    onSuccess: () => { setForm(emptyForm); setSelected(null); setMessage('Capacitación guardada.'); queryClient.invalidateQueries({ queryKey: ['trainings'] }) },
+    onSuccess: () => { setForm(emptyForm); setSelected(null); setMessage('Capacitación guardada.'); queryClient.invalidateQueries({ queryKey: ['v1-trainings'] }) },
     onError: () => setMessage('No fue posible guardar la capacitación.'),
   })
-  const deactivate = useMutation({ mutationFn: (id: number) => gridApi.deactivate('capacitaciones', id), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trainings'] }) })
+  const deactivate = useMutation({ mutationFn: trainingApi.deactivate, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['v1-trainings'] }) })
 
   function field(name: keyof TrainingForm, value: string) { setForm((current) => ({ ...current, [name]: value })) }
-  function edit(item: GridRow) {
+  function edit(item: Training) {
     setSelected(item)
     setForm({ nombre: String(item.nombre ?? ''), instructor: String(item.instructor ?? ''), intensidad: String(item.intensidad ?? ''), fechaInicio: String(item.fecha_inicio ?? '').slice(0, 10), horaInicio: String(item.hora_inicio ?? '').slice(0, 5), fechaFinal: String(item.fecha_final ?? '').slice(0, 10), horaFinal: String(item.hora_final ?? '').slice(0, 5), lugar: String(item.lugar ?? ''), observaciones: String(item.observaciones ?? '') })
   }

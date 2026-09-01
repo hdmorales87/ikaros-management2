@@ -134,6 +134,8 @@ export type CalendarEvent = { date: string; title: string; kind: string; tone: '
 export type ThirdPartySurveyQuestion = { id: number; tipo: 'cliente' | 'proveedor'; nombre: string }
 export type Location = { id: number; id_departamento: number; nombre: string }
 export type ImapRule = { id: number; palabra_clave: string; tipo: 'incidencia' | 'problema' | 'servicio'; impacto: number; urgencia: number; id_area: number; id_categoria: number; id_subcategoria: number; asunto_default: string }
+export type Training = { id: number; nombre: string; instructor: string | null; intensidad: number | null; fecha_inicio: string | null; hora_inicio: string | null; fecha_final: string | null; hora_final: string | null; lugar: string | null; observaciones: string | null }
+export type TrainingAttendee = { id: number; id_usuario: number; asistencia: string | boolean }
 export type OperationalReportRow = { id: number; asunto: string | null; estado: number | null; prioridad: number | null; fecha: string | null; tipo: 'Incidencia' | 'Problema' | 'Servicio' }
 export type RoleManagementData = { roles: { id: number; nombre: string }[]; permissions: { id: number; nombre: string; descripcion: string | null }[] }
 export type Project = { id: number; codigo: string | null; nombre: string; estado: number | null; fecha_inicio: string | null; fecha_final: string | null }
@@ -301,6 +303,18 @@ export const imapApi = {
   createRule: (accountId: number, payload: Omit<ImapRule, 'id'>) => api.post<ImapRule>(`/v1/imap/accounts/${accountId}/rules`, payload).then(({ data }) => data),
   updateRule: (accountId: number, ruleId: number, payload: Omit<ImapRule, 'id'>) => api.put<ImapRule>(`/v1/imap/accounts/${accountId}/rules/${ruleId}`, payload).then(({ data }) => data),
   deactivateRule: (accountId: number, ruleId: number) => api.delete(`/v1/imap/accounts/${accountId}/rules/${ruleId}`).then(({ data }) => data),
+}
+
+export const trainingApi = {
+  list: () => api.get<Training[]>('/v1/trainings').then(({ data }) => data),
+  find: (id: number) => api.get<Training>(`/v1/trainings/${id}`).then(({ data }) => data),
+  create: (payload: Omit<Training, 'id'>) => api.post<Training>('/v1/trainings', payload).then(({ data }) => data),
+  update: (id: number, payload: Partial<Omit<Training, 'id'>>) => api.put<Training>(`/v1/trainings/${id}`, payload).then(({ data }) => data),
+  deactivate: (id: number) => api.delete(`/v1/trainings/${id}`).then(({ data }) => data),
+  attendees: (id: number) => api.get<TrainingAttendee[]>(`/v1/trainings/${id}/attendees`).then(({ data }) => data),
+  addAttendee: (id: number, userId: number) => api.post<TrainingAttendee>(`/v1/trainings/${id}/attendees`, { id_usuario: userId }).then(({ data }) => data),
+  updateAttendance: (id: number, attendeeId: number, attended: boolean) => api.put<TrainingAttendee>(`/v1/trainings/${id}/attendees/${attendeeId}`, { asistencia: attended }).then(({ data }) => data),
+  removeAttendee: (id: number, attendeeId: number) => api.delete(`/v1/trainings/${id}/attendees/${attendeeId}`).then(({ data }) => data),
 }
 
 export const operationalReportApi = {

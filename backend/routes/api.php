@@ -82,6 +82,15 @@ Route::middleware(['security.headers', 'authenticate.jwt'])->group(function () {
         Route::post('/imap/accounts/{account}/rules', [App\Http\Controllers\Api\V1\ImapRuleController::class, 'store'])->middleware('permission:51');
         Route::put('/imap/accounts/{account}/rules/{rule}', [App\Http\Controllers\Api\V1\ImapRuleController::class, 'update'])->middleware('permission:51');
         Route::delete('/imap/accounts/{account}/rules/{rule}', [App\Http\Controllers\Api\V1\ImapRuleController::class, 'destroy'])->middleware('permission:51');
+        Route::get('/trainings', [App\Http\Controllers\Api\V1\TrainingController::class, 'index'])->middleware('permission:72');
+        Route::post('/trainings', [App\Http\Controllers\Api\V1\TrainingController::class, 'store'])->middleware('permission:72');
+        Route::get('/trainings/{training}', [App\Http\Controllers\Api\V1\TrainingController::class, 'show'])->middleware('permission:72');
+        Route::put('/trainings/{training}', [App\Http\Controllers\Api\V1\TrainingController::class, 'update'])->middleware('permission:72');
+        Route::delete('/trainings/{training}', [App\Http\Controllers\Api\V1\TrainingController::class, 'destroy'])->middleware('permission:72');
+        Route::get('/trainings/{training}/attendees', [App\Http\Controllers\Api\V1\TrainingController::class, 'attendees'])->middleware('permission:72');
+        Route::post('/trainings/{training}/attendees', [App\Http\Controllers\Api\V1\TrainingController::class, 'addAttendee'])->middleware('permission:72');
+        Route::put('/trainings/{training}/attendees/{attendee}', [App\Http\Controllers\Api\V1\TrainingController::class, 'updateAttendance'])->middleware('permission:72');
+        Route::delete('/trainings/{training}/attendees/{attendee}', [App\Http\Controllers\Api\V1\TrainingController::class, 'removeAttendee'])->middleware('permission:72');
         Route::get('/role-management', [App\Http\Controllers\RoleController::class, 'managementData'])->middleware('permission:32');
         Route::get('/project-hours', [App\Http\Controllers\Api\V1\ProjectHoursController::class, 'index'])->middleware('permission:91');
         Route::get('/operational-reports/requests', [App\Http\Controllers\Api\V1\OperationalReportController::class, 'requests'])->middleware('permission:18');
